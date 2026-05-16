@@ -151,7 +151,7 @@
       <button data-view="thesis">项目进度 <b id="countProject">0</b></button>
       <button data-view="review">复盘归档 <b id="countDone">0</b></button>
       <button data-view="report">周报月报 <b>2</b></button>
-      <button data-view="cloud">云同步 <b>3.6</b></button>
+      <button data-view="cloud">云同步 <b>3.7</b></button>
     </div>
     <button id="pushSideBtn" class="ghost">推送云端</button>
     <button id="pullSideBtn" class="ghost">拉取云端</button>
@@ -203,17 +203,6 @@
           <select id="scopeInput"><option value="today">今日待办</option><option value="all">全部未完成</option><option value="done">今日已完成</option><option value="doneAll">全部已完成</option></select>
         </div>
         <div id="completedSummary" class="completed-summary"></div>
-        <div class="mini-grid">
-          <div class="mini-card"><span>逾期叠加</span><b id="overdueCount">0</b></div>
-          <div class="mini-card"><span>本周待办</span><b id="weekLeftCount">0</b></div>
-          <div class="mini-card"><span>连续打卡</span><b id="streakCount">0</b></div>
-          <div class="mini-card"><span>今日专注</span><b id="focusTodayCount">0m</b></div>
-        </div>
-        <div class="toolbar">
-          <input id="searchInput" placeholder="搜索任务关键词" />
-          <select id="filterTypeInput"><option value="all">全部类型</option><option>论文</option><option>模型</option><option>文献</option><option>组会</option><option>比赛</option><option>行政</option><option>生活</option></select>
-          <select id="scopeInput"><option value="today">今日待办</option><option value="all">全部未完成</option><option value="done">今日已完成</option></select>
-        </div>
         <div class="mini-grid">
           <div class="mini-card"><span>逾期叠加</span><b id="overdueCount">0</b></div>
           <div class="mini-card"><span>本周待办</span><b id="weekLeftCount">0</b></div>
@@ -309,7 +298,7 @@
 
     <section id="view-cloud" class="view card hidden">
       <h2>Supabase 云同步</h2>
-      <div class="notice"><b>只填写 Project URL 和 anon public key，不要填 service_role key。</b></div>
+      <div class="notice"><b>只填写 Project URL 和 anon public key，不要填 service_role key。</b><br>登录后会开启自动同步：每次保存、完成、删除、顺延或归档都会自动推送云端；换设备打开网页会自动读取云端最新内容。</div>
       <div class="settings">
         <input id="supabaseUrlInput" placeholder="Supabase Project URL" />
         <input id="supabaseAnonInput" placeholder="Supabase anon public key" />
@@ -342,6 +331,8 @@ let timerStartedAt = null;
 let timerSeconds = 25 * 60;
 let timerDefaultSeconds = 25 * 60;
 let timerId = null;
+let autoSyncTimer = null;
+let isAutoSyncing = false;
 
 function $(id) { return document.getElementById(id); }
 function toDateKey(date) {
@@ -402,6 +393,20 @@ function summarizeFocus(dateKey) {
 function saveLocal() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   render();
+  scheduleAutoPush();
+}
+function scheduleAutoPush() {
+  if (!settings.url || !settings.anon) return;
+  clearTimeout(autoSyncTimer);
+  autoSyncTimer = setTimeout(() => autoPushCloud(), 900);
+}
+async function autoPushCloud() {
+  if (isAutoSyncing) return;
+  isAutoSyncing = true;
+  renderSyncStatus('syncing');
+  const ok = await pushCloud({ silent: true });
+  isAutoSyncing = false;
+  renderSyncStatus(ok ? 'synced' : undefined);
 }
 function ensureToday() {
   if (!state.daily) state.daily = {};
@@ -936,9 +941,11 @@ async function refreshUser() {
   currentUser = data.user || null;
   return currentUser;
 }
-function renderSyncStatus() {
+function renderSyncStatus(mode) {
   const node = $('syncStatus');
-  if (currentUser) { node.textContent = 'Supabase 已登录'; node.className = 'status ok'; }
+  if (mode === 'syncing') { node.textContent = '自动同步中'; node.className = 'status'; return; }
+  if (mode === 'synced') { node.textContent = '已自动同步'; node.className = 'status ok'; return; }
+  if (currentUser) { node.textContent = 'Supabase 已登录 · 自动同步'; node.className = 'status ok'; }
   else if (settings.url && settings.anon) { node.textContent = '已配置未登录'; node.className = 'status'; }
   else { node.textContent = '本地模式'; node.className = 'status'; }
 }
@@ -955,8 +962,9 @@ async function signup() {
   const { data, error } = await supabaseClient.auth.signUp({ email, password });
   if (error) return toast(`注册失败：${error.message}`);
   currentUser = data.user || null;
-  toast(data.session ? '注册并登录成功' : '注册成功，请邮箱确认后登录');
-  renderSyncStatus();
+  if (data.session) await pushCloud({ silent: true });
+  toast(data.session ? '注册并登录成功，已开启自动同步' : '注册成功，请邮箱确认后登录');
+  renderSyncStatus(data.session ? 'synced' : undefined);
 }
 async function login() {
   if (!initSupabaseFromInputs()) return;
@@ -965,8 +973,10 @@ async function login() {
   const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
   if (error) return toast(`登录失败：${error.message}`);
   currentUser = data.user;
-  toast('登录成功');
-  renderSyncStatus();
+  toast('登录成功，正在读取云端最新内容');
+  const pulled = await pullCloud({ silent: true, keepView: true });
+  if (!pulled) await pushCloud({ silent: true });
+  renderSyncStatus('synced');
 }
 async function logout() {
   if (supabaseClient) await supabaseClient.auth.signOut();
@@ -974,25 +984,37 @@ async function logout() {
   toast('已退出');
   renderSyncStatus();
 }
-async function pushCloud() {
+async function pushCloud(options = {}) {
+  const silent = options.silent === true;
   await refreshUser();
-  if (!currentUser) { showView('cloud'); return toast('请先登录'); }
+  if (!currentUser) {
+    if (!silent) { showView('cloud'); toast('请先登录'); }
+    return false;
+  }
   const { error } = await supabaseClient.from('research_growth_states').upsert({ user_id: currentUser.id, state, updated_at: new Date().toISOString() }, { onConflict: 'user_id' });
-  if (error) return toast(`推送失败：${error.message}`);
-  toast('已推送云端');
+  if (error) { if (!silent) toast(`推送失败：${error.message}`); return false; }
+  if (!silent) toast('已推送云端');
+  return true;
 }
-async function pullCloud() {
+async function pullCloud(options = {}) {
+  const silent = options.silent === true;
+  const keepView = options.keepView === true;
   await refreshUser();
-  if (!currentUser) { showView('cloud'); return toast('请先登录'); }
+  if (!currentUser) {
+    if (!silent) { showView('cloud'); toast('请先登录'); }
+    return false;
+  }
   const { data, error } = await supabaseClient.from('research_growth_states').select('state').eq('user_id', currentUser.id).maybeSingle();
-  if (error) return toast(`拉取失败：${error.message}`);
-  if (!data || !data.state) return toast('云端还没有数据，先推送一次');
+  if (error) { if (!silent) toast(`拉取失败：${error.message}`); return false; }
+  if (!data || !data.state) { if (!silent) toast('云端还没有数据，先推送一次'); return false; }
   state = Object.assign({ tasks: [], daily: {}, archive: {}, thesis: {}, projects: [], focusSessions: [] }, data.state);
   migrateState();
   fillDaily();
   resetProjectForm();
   render();
-  toast('已拉取云端');
+  if (!keepView) showView('today');
+  if (!silent) toast('已拉取云端');
+  return true;
 }
 
 function renderTimer() {
@@ -1089,11 +1111,13 @@ async function init() {
   $('dueDateInput').value = TODAY;
   $('archiveDateInput').value = TODAY;
   renderTimer();
+  let loadedRemote = false;
   if (settings.url && settings.anon && window.supabase) {
     supabaseClient = window.supabase.createClient(settings.url, settings.anon);
     await refreshUser();
+    if (currentUser) loadedRemote = await pullCloud({ silent: true, keepView: true });
   }
-  if (!state.tasks.length) {
+  if (!loadedRemote && !state.tasks.length) {
     state.tasks = [
       normalizeTask({ id: 'demo1', text: '确定今天最重要的科研主线，并拆成一个15分钟动作', type: '论文', priority: 'today', createdDate: TODAY }),
       normalizeTask({ id: 'demo2', text: '整理组会汇报：完成、卡点、下周计划各写三行', type: '组会', priority: 'week', createdDate: TODAY })
