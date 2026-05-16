@@ -77,11 +77,22 @@
     .bar { height: 12px; background: rgba(255,255,255,.75); border-radius: 999px; overflow: hidden; margin: 14px 0; }
     .bar i { display: block; height: 100%; width: 0%; background: linear-gradient(90deg,#16a085,#c8fff2); }
     .view-grid { display: grid; grid-template-columns: 1fr 340px; gap: 18px; }
-    .row-task { display: grid; grid-template-columns: 1fr 120px 140px 90px; gap: 10px; }
+    .row-task { display: grid; grid-template-columns: 1fr 120px 140px 150px 90px; gap: 10px; }
     .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     .row-3 { display: grid; grid-template-columns: 1.2fr 1fr 120px; gap: 10px; }
     .quick { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
     .quick button { background: #fff; border: 1px solid var(--line); color: #1f2937; border-radius: 999px; padding: 9px 12px; }
+    .toolbar { display: grid; grid-template-columns: 1fr 150px 130px; gap: 10px; margin: 12px 0; }
+    .mini-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin: 12px 0; }
+    .mini-card { background: #fff; border: 1px solid var(--line); border-radius: 18px; padding: 12px; }
+    .mini-card span { display: block; color: var(--sub); font-size: 12px; margin-bottom: 4px; }
+    .mini-card b { font-size: 22px; }
+    .timer { text-align: center; background: linear-gradient(135deg,#fff,#e8fff8); }
+    .timer-display { font-size: 42px; font-weight: 900; letter-spacing: .06em; margin: 10px 0; color: #0f766e; }
+    .timer-presets { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-top: 10px; }
+    .task-actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+    .task-actions button { padding: 9px 10px; border-radius: 12px; }
+    .empty-state { border: 1px dashed #93dcca; border-radius: 20px; padding: 18px; text-align: center; background: rgba(255,255,255,.65); }
     .task-item { display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center; background: linear-gradient(135deg,#fff,#f2fffb); border: 1px solid var(--line); border-radius: 20px; padding: 14px; margin: 10px 0; }
     .task-item.done { opacity: .62; }
     .task-item.done .task-title { text-decoration: line-through; }
@@ -101,7 +112,7 @@
     .toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%) translateY(20px); opacity: 0; pointer-events: none; background: linear-gradient(135deg,#6edac6,#a7f3d0); color: #102a2a; padding: 12px 16px; border-radius: 999px; font-weight: 900; transition: .2s; box-shadow: var(--shadow); max-width: 90vw; }
     .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
     @media(max-width: 900px) {
-      .app, .hero, .view-grid, .row-task, .row-2, .row-3, .settings, .kpis { grid-template-columns: 1fr; }
+      .app, .hero, .view-grid, .row-task, .row-2, .row-3, .settings, .kpis, .toolbar, .mini-grid { grid-template-columns: 1fr; }
       .side { position: relative; height: auto; }
       .main { padding: 18px; }
       .hero h2 { font-size: 32px; }
@@ -125,7 +136,7 @@
       <button data-view="thesis">论文进度 <b id="countThesis">0%</b></button>
       <button data-view="review">复盘归档 <b id="countDone">0</b></button>
       <button data-view="report">周报月报 <b>2</b></button>
-      <button data-view="cloud">云同步 <b>3.2</b></button>
+      <button data-view="cloud">云同步 <b>3.3</b></button>
     </div>
     <button id="pushSideBtn" class="ghost">推送云端</button>
     <button id="pullSideBtn" class="ghost">拉取云端</button>
@@ -154,6 +165,7 @@
           <input id="taskInput" placeholder="例如：整理模型参数表" />
           <select id="typeInput"><option>论文</option><option>模型</option><option>文献</option><option>组会</option><option>比赛</option><option>行政</option><option>生活</option></select>
           <select id="priorityInput"><option value="today">今天必须动</option><option value="week">本周推进</option><option value="low">有空再说</option></select>
+          <input id="dueDateInput" type="date" title="计划日期" />
           <button id="addTaskBtn" class="primary">加入</button>
         </div>
         <div class="quick">
@@ -161,6 +173,16 @@
           <button data-template="整理组会汇报：完成、卡点、下周计划各三行" data-type="组会">组会汇报</button>
           <button data-template="检查模型报错日志，记录原因和下一步尝试" data-type="模型">模型排错</button>
           <button data-template="推进论文正文一个小段落，至少写出200字" data-type="论文">论文推进</button>
+        </div>
+        <div class="toolbar">
+          <input id="searchInput" placeholder="搜索任务关键词" />
+          <select id="filterTypeInput"><option value="all">全部类型</option><option>论文</option><option>模型</option><option>文献</option><option>组会</option><option>比赛</option><option>行政</option><option>生活</option></select>
+          <select id="scopeInput"><option value="today">今日待办</option><option value="all">全部未完成</option><option value="done">今日已完成</option></select>
+        </div>
+        <div class="mini-grid">
+          <div class="mini-card"><span>逾期叠加</span><b id="overdueCount">0</b></div>
+          <div class="mini-card"><span>本周待办</span><b id="weekLeftCount">0</b></div>
+          <div class="mini-card"><span>连续打卡</span><b id="streakCount">0</b></div>
         </div>
         <div id="taskList"></div>
       </div>
@@ -174,6 +196,21 @@
           </div>
           <textarea id="noteInput" placeholder="卡点、灵感、导师建议"></textarea>
           <button id="saveDailyBtn" class="primary" style="width:100%;margin-top:10px">保存打卡</button>
+        </div>
+        <div class="card timer" style="margin-top:18px">
+          <h2>专注计时</h2>
+          <div id="timerDisplay" class="timer-display">25:00</div>
+          <p id="timerHint" class="sub">选择一个任务，开始一轮不被打扰的推进。</p>
+          <div class="quick" style="justify-content:center">
+            <button id="startTimerBtn" class="primary">开始</button>
+            <button id="pauseTimerBtn" class="ghost">暂停</button>
+            <button id="resetTimerBtn" class="ghost">重置</button>
+          </div>
+          <div class="timer-presets">
+            <button data-minutes="15" class="ghost">15m</button>
+            <button data-minutes="25" class="ghost">25m</button>
+            <button data-minutes="50" class="ghost">50m</button>
+          </div>
         </div>
         <div class="card" style="margin-top:18px"><h2>今日建议</h2><p id="adviceText" class="sub">先选一个 15 分钟能启动的任务。</p></div>
       </aside>
@@ -213,6 +250,7 @@
       <h2>周报 / 月报</h2>
       <button id="weekReportBtn" class="primary">生成周报</button>
       <button id="monthReportBtn" class="ghost">生成月报</button>
+      <button id="copyReportBtn" class="ghost">复制报告</button>
       <textarea id="reportText" style="margin-top:12px"></textarea>
     </section>
 
@@ -247,6 +285,9 @@ let state = loadState();
 let settings = loadSettings();
 let supabaseClient = null;
 let currentUser = null;
+let timerSeconds = 25 * 60;
+let timerDefaultSeconds = 25 * 60;
+let timerId = null;
 
 function $(id) { return document.getElementById(id); }
 function toDateKey(date) {
@@ -280,13 +321,28 @@ function formatTime(value) {
   if (Number.isNaN(date.getTime())) return value;
   return date.toLocaleString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
 }
+function addDaysKey(key, days) {
+  const date = parseDateKey(key);
+  date.setDate(date.getDate() + days);
+  return toDateKey(date);
+}
+function getWeekEndKey() { return addDaysKey(TODAY, 6); }
+function countStreak() {
+  let streak = 0;
+  let cursor = TODAY;
+  while (state.daily?.[cursor] && (state.daily[cursor].focus || state.daily[cursor].note || state.daily[cursor].checked)) {
+    streak += 1;
+    cursor = addDaysKey(cursor, -1);
+  }
+  return streak;
+}
 function saveLocal() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   render();
 }
 function ensureToday() {
   if (!state.daily) state.daily = {};
-  if (!state.daily[TODAY]) state.daily[TODAY] = { focus: '', energy: '中', mood: '稳定', note: '' };
+  if (!state.daily[TODAY]) state.daily[TODAY] = { focus: '', energy: '中', mood: '稳定', note: '', checked: false };
   if (!state.thesis) state.thesis = { title: '', stage: '选题构思', progress: 0, done: '', next: '', blockers: '', updatedAt: '' };
 }
 function normalizeTask(task) {
@@ -326,18 +382,29 @@ function carryOverTasks() {
   });
   if (count) toast(`有 ${count} 个未完成任务已叠加到今天`);
 }
+function sortTasks(tasks) {
+  const weights = { today: 0, week: 1, low: 2 };
+  return tasks.sort((a, b) => (weights[a.priority] ?? 9) - (weights[b.priority] ?? 9) || a.dueDate.localeCompare(b.dueDate) || new Date(a.assignedAt) - new Date(b.assignedAt));
+}
 function todayTasks() {
-  return state.tasks
-    .filter(task => !task.done && task.dueDate <= TODAY)
-    .sort((a, b) => {
-      const weights = { today: 0, week: 1, low: 2 };
-      return (weights[a.priority] ?? 9) - (weights[b.priority] ?? 9) || new Date(a.assignedAt) - new Date(b.assignedAt);
-    });
+  return sortTasks(state.tasks.filter(task => !task.done && task.dueDate <= TODAY));
+}
+function visibleTasks() {
+  const keyword = ($('searchInput')?.value || '').trim().toLowerCase();
+  const filterType = $('filterTypeInput')?.value || 'all';
+  const scope = $('scopeInput')?.value || 'today';
+  let tasks = [];
+  if (scope === 'done') tasks = state.tasks.filter(task => task.completedDate === TODAY);
+  else if (scope === 'all') tasks = state.tasks.filter(task => !task.done);
+  else tasks = todayTasks();
+  tasks = tasks.filter(task => (filterType === 'all' || task.type === filterType) && (!keyword || task.text.toLowerCase().includes(keyword)));
+  return sortTasks(tasks);
 }
 function addTask(text, type, priority) {
   const taskText = (text || $('taskInput').value).trim();
   if (!taskText) return toast('先写一个具体动作');
   const now = new Date().toISOString();
+  const dueDate = $('dueDateInput').value || TODAY;
   state.tasks.unshift({
     id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
     text: taskText,
@@ -345,13 +412,14 @@ function addTask(text, type, priority) {
     priority: priority || $('priorityInput').value,
     done: false,
     createdDate: TODAY,
-    dueDate: TODAY,
+    dueDate,
     assignedAt: now,
     completedDate: null,
     completedAt: null,
     carryCount: 0
   });
   $('taskInput').value = '';
+  $('dueDateInput').value = TODAY;
   saveLocal();
 }
 function toggleTask(id) {
@@ -366,11 +434,18 @@ function deleteTask(id) {
   state.tasks = state.tasks.filter(task => task.id !== id);
   saveLocal();
 }
+function postponeTask(id, days = 1) {
+  state.tasks = state.tasks.map(task => task.id === id ? { ...task, dueDate: addDaysKey(task.dueDate || TODAY, days) } : task);
+  saveLocal();
+  toast(`已顺延 ${days} 天`);
+}
 function renderTasks() {
-  const tasks = todayTasks();
+  const tasks = visibleTasks();
   const list = $('taskList');
+  const scope = $('scopeInput')?.value || 'today';
   if (!tasks.length) {
-    list.innerHTML = '<p class="sub">这里暂时很安静，写一个 15 分钟能启动的小动作吧。</p>';
+    const copy = scope === 'done' ? '今天还没有完成记录，先完成一个小任务吧。' : '这里暂时很安静，写一个 15 分钟能启动的小动作吧。';
+    list.innerHTML = `<div class="empty-state"><p class="sub">${copy}</p></div>`;
     return;
   }
   list.innerHTML = tasks.map(task => `
@@ -378,14 +453,18 @@ function renderTasks() {
       <button class="check" onclick="toggleTask('${task.id}')">${task.done ? '✓' : ''}</button>
       <div>
         <div class="task-title">${escapeHtml(task.text)}</div>
-        <div class="meta">${escapeHtml(task.type)} · ${priorityLabel[task.priority] || task.priority} · 布置：${formatTime(task.assignedAt)}${task.completedAt ? ' · 完成：' + formatTime(task.completedAt) : ''}${task.carryCount ? ' · 已叠加 ' + task.carryCount + ' 天' : ''}</div>
+        <div class="meta">${escapeHtml(task.type)} · ${priorityLabel[task.priority] || task.priority} · 计划：${task.dueDate || TODAY} · 布置：${formatTime(task.assignedAt)}${task.completedAt ? ' · 完成：' + formatTime(task.completedAt) : ''}${task.carryCount ? ' · 已叠加 ' + task.carryCount + ' 天' : ''}</div>
       </div>
-      <button class="ghost" onclick="deleteTask('${task.id}')">删除</button>
+      <div class="task-actions">
+        ${task.done ? '' : `<button class="ghost" onclick="postponeTask('${task.id}', 1)">明天</button>`}
+        ${task.done ? '' : `<button class="ghost" onclick="postponeTask('${task.id}', 7)">下周</button>`}
+        <button class="ghost" onclick="deleteTask('${task.id}')">删除</button>
+      </div>
     </div>
   `).join('');
 }
 function saveDaily() {
-  state.daily[TODAY] = { focus: $('focusInput').value, energy: $('energyInput').value, mood: $('moodInput').value, note: $('noteInput').value };
+  state.daily[TODAY] = { focus: $('focusInput').value, energy: $('energyInput').value, mood: $('moodInput').value, note: $('noteInput').value, checked: true };
   saveLocal();
   toast('打卡已保存');
 }
@@ -533,6 +612,9 @@ function renderStats() {
   $('rateHint').textContent = todayAll.length ? `今日已完成 ${todayDone.length}/${todayAll.length} 项` : '先添加一个小任务，给今天点火。';
   $('countToday').textContent = todayTasks().length;
   $('adviceText').textContent = buildAdvice();
+  $('overdueCount').textContent = state.tasks.filter(task => !task.done && Number(task.carryCount || 0) > 0).length;
+  $('weekLeftCount').textContent = state.tasks.filter(task => !task.done && task.dueDate >= TODAY && task.dueDate <= getWeekEndKey()).length;
+  $('streakCount').textContent = countStreak();
 }
 function render() {
   $('dateText').textContent = new Date().toLocaleDateString('zh-CN', { month: 'long', day: 'numeric', weekday: 'long' });
@@ -546,6 +628,16 @@ function showView(view) {
   document.querySelectorAll('.view').forEach(node => node.classList.add('hidden'));
   $(`view-${view}`).classList.remove('hidden');
   document.querySelectorAll('.nav button').forEach(btn => btn.classList.toggle('on', btn.dataset.view === view));
+}
+function copyReport() {
+  const text = $('reportText').value.trim();
+  if (!text) return toast('先生成周报或月报');
+  if (!navigator.clipboard) {
+    $('reportText').select();
+    document.execCommand('copy');
+    return toast('报告已复制');
+  }
+  navigator.clipboard.writeText(text).then(() => toast('报告已复制')).catch(() => toast('复制失败，请手动全选复制'));
 }
 function exportAll() {
   const thesis = state.thesis || {};
@@ -654,6 +746,47 @@ async function pullCloud() {
   render();
   toast('已拉取云端');
 }
+
+function renderTimer() {
+  const minutes = String(Math.floor(timerSeconds / 60)).padStart(2, '0');
+  const seconds = String(timerSeconds % 60).padStart(2, '0');
+  $('timerDisplay').textContent = `${minutes}:${seconds}`;
+}
+function setTimer(minutes) {
+  pauseTimer();
+  timerDefaultSeconds = minutes * 60;
+  timerSeconds = timerDefaultSeconds;
+  $('timerHint').textContent = `${minutes} 分钟专注轮已准备好。`;
+  renderTimer();
+}
+function startTimer() {
+  if (timerId) return;
+  $('timerHint').textContent = '专注中：只做当前这一件事。';
+  timerId = setInterval(() => {
+    timerSeconds -= 1;
+    renderTimer();
+    if (timerSeconds <= 0) {
+      pauseTimer();
+      timerSeconds = timerDefaultSeconds;
+      renderTimer();
+      $('timerHint').textContent = '一轮专注完成，休息 3-5 分钟再继续。';
+      toast('专注完成，给自己一个小奖励');
+    }
+  }, 1000);
+}
+function pauseTimer() {
+  if (!timerId) return;
+  clearInterval(timerId);
+  timerId = null;
+  $('timerHint').textContent = '已暂停，准备好后继续。';
+}
+function resetTimer() {
+  pauseTimer();
+  timerSeconds = timerDefaultSeconds;
+  $('timerHint').textContent = '已重置专注计时。';
+  renderTimer();
+}
+
 function bindEvents() {
   $('addTaskBtn').addEventListener('click', () => addTask());
   $('taskInput').addEventListener('keydown', event => { if (event.key === 'Enter') addTask(); });
@@ -667,6 +800,11 @@ function bindEvents() {
   $('saveReviewBtn').addEventListener('click', saveReview);
   $('weekReportBtn').addEventListener('click', () => generateReport(7));
   $('monthReportBtn').addEventListener('click', () => generateReport(30));
+  $('copyReportBtn').addEventListener('click', copyReport);
+  ['searchInput', 'filterTypeInput', 'scopeInput'].forEach(id => {
+    $(id).addEventListener('input', renderTasks);
+    $(id).addEventListener('change', renderTasks);
+  });
   $('exportBtn').addEventListener('click', exportAll);
   $('clearBtn').addEventListener('click', () => {
     if (!confirm('清空本地数据？云端不会自动删除。')) return;
@@ -684,12 +822,18 @@ function bindEvents() {
   $('pullCloudBtn').addEventListener('click', pullCloud);
   $('pushSideBtn').addEventListener('click', pushCloud);
   $('pullSideBtn').addEventListener('click', pullCloud);
+  $('startTimerBtn').addEventListener('click', startTimer);
+  $('pauseTimerBtn').addEventListener('click', pauseTimer);
+  $('resetTimerBtn').addEventListener('click', resetTimer);
+  document.querySelectorAll('.timer-presets button[data-minutes]').forEach(btn => btn.addEventListener('click', () => setTimer(Number(btn.dataset.minutes))));
 }
 async function init() {
   migrateState();
   $('supabaseUrlInput').value = settings.url || '';
   $('supabaseAnonInput').value = settings.anon || '';
   $('emailInput').value = settings.email || '';
+  $('dueDateInput').value = TODAY;
+  renderTimer();
   if (settings.url && settings.anon && window.supabase) {
     supabaseClient = window.supabase.createClient(settings.url, settings.anon);
     await refreshUser();
