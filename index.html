@@ -77,12 +77,13 @@
     .bar { height: 12px; background: rgba(255,255,255,.75); border-radius: 999px; overflow: hidden; margin: 14px 0; }
     .bar i { display: block; height: 100%; width: 0%; background: linear-gradient(90deg,#16a085,#c8fff2); }
     .view-grid { display: grid; grid-template-columns: 1fr 340px; gap: 18px; }
-    .row-task { display: grid; grid-template-columns: minmax(280px,1fr) 120px 140px 150px 90px; gap: 10px; align-items: end; }
+    .row-task { display: grid; grid-template-columns: 120px 140px 150px 90px; gap: 10px; align-items: end; }
     .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     .row-3 { display: grid; grid-template-columns: 1.2fr 1fr 120px; gap: 10px; }
     .field { display: grid; gap: 6px; }
     .field span { color: var(--sub); font-size: 12px; font-weight: 900; }
-    .task-input { min-height: 76px; line-height: 1.55; resize: vertical; }
+    .task-field { grid-column: 1 / -1; }
+    .task-input { min-height: 96px; line-height: 1.55; resize: vertical; }
     .quick { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
     .quick button { background: #fff; border: 1px solid var(--line); color: #1f2937; border-radius: 999px; padding: 9px 12px; }
     .toolbar { display: grid; grid-template-columns: 1fr 150px 130px; gap: 10px; margin: 12px 0; }
@@ -99,6 +100,9 @@
     .task-actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
     .task-actions button { padding: 9px 10px; border-radius: 12px; }
     .empty-state { border: 1px dashed #93dcca; border-radius: 20px; padding: 18px; text-align: center; background: rgba(255,255,255,.65); }
+    .completed-summary { display: grid; grid-template-columns: repeat(auto-fit,minmax(130px,1fr)); gap: 10px; margin: 12px 0; }
+    .completed-pill { text-align: left; background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 10px 12px; color: #0f766e; }
+    .completed-pill b { display: block; font-size: 20px; color: var(--text); margin-top: 3px; }
     .task-item { display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center; background: linear-gradient(135deg,#fff,#f2fffb); border: 1px solid var(--line); border-radius: 20px; padding: 14px; margin: 10px 0; }
     .task-item.done { opacity: .62; }
     .task-item.done .task-title { text-decoration: line-through; }
@@ -147,7 +151,7 @@
       <button data-view="thesis">项目进度 <b id="countProject">0</b></button>
       <button data-view="review">复盘归档 <b id="countDone">0</b></button>
       <button data-view="report">周报月报 <b>2</b></button>
-      <button data-view="cloud">云同步 <b>3.5</b></button>
+      <button data-view="cloud">云同步 <b>3.6</b></button>
     </div>
     <button id="pushSideBtn" class="ghost">推送云端</button>
     <button id="pullSideBtn" class="ghost">拉取云端</button>
@@ -179,8 +183,8 @@
       <div class="card">
         <h2>今日计划</h2>
         <div class="row-task">
-          <label class="field"><span>任务动作</span><textarea id="taskInput" class="task-input" placeholder="例如：整理模型参数表。支持写完整计划；按 Ctrl/⌘ + Enter 加入任务。"></textarea></label>
-          <label class="field"><span>类型</span><select id="typeInput"><option>论文</option><option>模型</option><option>文献</option><option>组会</option><option>比赛</option><option>行政</option><option>生活</option></select></label>
+          <label class="field task-field"><span>任务动作</span><textarea id="taskInput" class="task-input" placeholder="例如：整理模型参数表。支持写完整计划；按 Ctrl/⌘ + Enter 加入任务。"></textarea></label>
+          <label class="field"><span>类型</span><select id="typeInput"><option>论文</option><option>模型</option><option>文献</option><option>组会</option><option>比赛</option><option>行政</option><option>生活</option><option>运动</option></select></label>
           <label class="field"><span>优先级</span><select id="priorityInput"><option value="today">今天必须动</option><option value="week">本周推进</option><option value="low">有空再说</option></select></label>
           <label class="field"><span>计划日期</span><input id="dueDateInput" type="date" title="计划日期" /></label>
           <button id="addTaskBtn" class="primary">加入</button>
@@ -188,8 +192,22 @@
         <div class="quick">
           <button data-template="读一篇文献，整理研究问题、方法、创新点和可借鉴处" data-type="文献">文献速读</button>
           <button data-template="整理组会汇报：完成、卡点、下周计划各三行" data-type="组会">组会汇报</button>
-          <button data-template="检查模型报错日志，记录原因和下一步尝试" data-type="模型">模型排错</button>
+          <button data-template="设计或完善模型结构，明确变量、假设、输入输出和验证方式" data-type="模型">模型构建</button>
           <button data-template="推进论文正文一个小段落，至少写出200字" data-type="论文">论文推进</button>
+          <button data-template="完成一次体育锻炼，记录项目、时长和身体感受" data-type="运动">体育锻炼</button>
+          <button data-template="主动联系一位同学、朋友、导师或合作者，完成一次高质量交流" data-type="生活">人际交往</button>
+        </div>
+        <div class="toolbar">
+          <input id="searchInput" placeholder="搜索任务关键词" />
+          <select id="filterTypeInput"><option value="all">全部类型</option><option>论文</option><option>模型</option><option>文献</option><option>组会</option><option>比赛</option><option>行政</option><option>生活</option><option>运动</option></select>
+          <select id="scopeInput"><option value="today">今日待办</option><option value="all">全部未完成</option><option value="done">今日已完成</option><option value="doneAll">全部已完成</option></select>
+        </div>
+        <div id="completedSummary" class="completed-summary"></div>
+        <div class="mini-grid">
+          <div class="mini-card"><span>逾期叠加</span><b id="overdueCount">0</b></div>
+          <div class="mini-card"><span>本周待办</span><b id="weekLeftCount">0</b></div>
+          <div class="mini-card"><span>连续打卡</span><b id="streakCount">0</b></div>
+          <div class="mini-card"><span>今日专注</span><b id="focusTodayCount">0m</b></div>
         </div>
         <div class="toolbar">
           <input id="searchInput" placeholder="搜索任务关键词" />
@@ -476,6 +494,7 @@ function visibleTasks() {
   const scope = $('scopeInput')?.value || 'today';
   let tasks = [];
   if (scope === 'done') tasks = state.tasks.filter(task => task.completedDate === TODAY);
+  else if (scope === 'doneAll') tasks = state.tasks.filter(task => task.done);
   else if (scope === 'all') tasks = state.tasks.filter(task => !task.done);
   else tasks = todayTasks();
   tasks = tasks.filter(task => (filterType === 'all' || task.type === filterType) && (!keyword || task.text.toLowerCase().includes(keyword)));
@@ -520,12 +539,30 @@ function postponeTask(id, days = 1) {
   saveLocal();
   toast(`已顺延 ${days} 天`);
 }
+
+function renderCompletedSummary() {
+  const completed = state.tasks.filter(task => task.done);
+  const summary = completed.reduce((acc, task) => {
+    acc[task.type] = (acc[task.type] || 0) + 1;
+    return acc;
+  }, {});
+  const entries = Object.entries(summary).sort((a, b) => b[1] - a[1]);
+  $('completedSummary').innerHTML = entries.length ? entries.map(([type, count]) => `
+    <button class="completed-pill" onclick="showCompletedType('${escapeHtml(type)}')"><span>${escapeHtml(type)}</span><b>${count} 项</b></button>
+  `).join('') : '<div class="empty-state"><p class="sub">全部已完成归类会在这里按类型汇总。</p></div>';
+}
+function showCompletedType(type) {
+  $('scopeInput').value = 'doneAll';
+  $('filterTypeInput').value = type;
+  renderTasks();
+}
+
 function renderTasks() {
   const tasks = visibleTasks();
   const list = $('taskList');
   const scope = $('scopeInput')?.value || 'today';
   if (!tasks.length) {
-    const copy = scope === 'done' ? '今天还没有完成记录，先完成一个小任务吧。' : '这里暂时很安静，写一个 15 分钟能启动的小动作吧。';
+    const copy = scope === 'done' || scope === 'doneAll' ? '还没有匹配的完成记录，先完成一个小任务吧。' : '这里暂时很安静，写一个 15 分钟能启动的小动作吧。';
     list.innerHTML = `<div class="empty-state"><p class="sub">${copy}</p></div>`;
     return;
   }
@@ -832,6 +869,7 @@ function renderStats() {
 function render() {
   $('dateText').textContent = new Date().toLocaleDateString('zh-CN', { month: 'long', day: 'numeric', weekday: 'long' });
   renderTasks();
+  renderCompletedSummary();
   renderStats();
   renderFocusLog();
   renderArchive();
