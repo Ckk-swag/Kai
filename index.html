@@ -1,192 +1,711 @@
 <!doctype html>
 <html lang="zh-CN">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#b8f2e6">
-<title>开开的博士成长计划</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<style>
-:root{--bg:#f4fffb;--card:#ffffffdf;--text:#111827;--sub:#4b5563;--line:#d8f3ea;--mint:#7ee7d4;--green:#16a085;--pink:#ffe4ee;--shadow:0 20px 55px rgba(94,203,184,.18)}
-*{box-sizing:border-box}
-body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;color:var(--text);background:radial-gradient(circle at top left,#dffbf4 0,#f4fffb 35%,transparent 60%),linear-gradient(135deg,#f4fffb,#ecfff8)}
-button,input,select,textarea{font:inherit}
-button{cursor:pointer;border:0;border-radius:15px;padding:12px 14px;font-weight:900}
-input,select,textarea{width:100%;border:1px solid var(--line);border-radius:15px;padding:13px;background:#fff;color:#111827}
-textarea{min-height:160px;line-height:1.7}
-.app{display:grid;grid-template-columns:300px 1fr;min-height:100vh}
-.side{position:sticky;top:0;height:100vh;padding:22px;background:#ffffffbd;border-right:1px solid var(--line);backdrop-filter:blur(16px);display:flex;flex-direction:column;gap:14px;overflow:auto}
-.brand{display:flex;gap:12px;align-items:center}
-.logo{width:50px;height:50px;border-radius:18px;display:grid;place-items:center;background:linear-gradient(135deg,#2dd4bf,#7dd3fc);color:white;font-size:24px;font-weight:900}
-.brand h1{font-size:20px;margin:0}.brand p{font-size:13px;color:var(--sub);margin:5px 0 0}
-.card{background:var(--card);border:1px solid var(--line);border-radius:24px;box-shadow:var(--shadow);padding:18px}
-.today{background:linear-gradient(135deg,#fff,#e8fff8)}
-.nav{display:grid;gap:8px}
-.nav button{background:white;border:1px solid var(--line);color:#1f2937;text-align:left;display:flex;justify-content:space-between;align-items:center}
-.nav button.on{background:linear-gradient(135deg,#dffbf4,#c8fff2);color:#064e3b}
-.badge{border-radius:999px;padding:6px 10px;font-size:12px;font-weight:900;background:#fff4bf;color:#7a6510}.badge.ok{background:#dffbf4;color:#064e3b}.badge.warn{background:#ffe4ee;color:#b83268}
-.main{padding:28px;max-width:1180px;width:100%;margin:0 auto}
-.hero{display:grid;grid-template-columns:1fr 310px;gap:18px;margin-bottom:18px}
-.hero h2{font-size:40px;line-height:1.1;margin:0 0 10px}.hero span{background:linear-gradient(135deg,#10a88f,#5ecbb8);-webkit-background-clip:text;color:transparent}
-.hero p,.sub{color:var(--sub);line-height:1.7}
-.growth{background:linear-gradient(135deg,#8debd8,#b8f2e6 60%,#d9fff5)}
-.growth strong{font-size:34px;display:block}
-.bar{height:12px;background:#ffffffa8;border-radius:999px;overflow:hidden;margin:14px 0}.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#16a085,#c8fff2)}
-.grid{display:grid;grid-template-columns:1fr 340px;gap:18px}
-.row{display:grid;grid-template-columns:1fr 120px 140px 90px;gap:10px}
-.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.row3{display:grid;grid-template-columns:1.2fr 1fr 120px;gap:10px}
-.task{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;background:linear-gradient(135deg,#fff,#f2fffb);border:1px solid var(--line);border-radius:20px;padding:14px;margin:10px 0}
-.task.done{opacity:.6}.task.done .title{text-decoration:line-through}
-.check{width:26px;height:26px;border:2px solid #93dcca;background:white;color:white;border-radius:9px;padding:0}.done .check{background:#16a085}
-.title{font-weight:900}.meta{font-size:13px;color:#4b5563;margin-top:5px;line-height:1.6}
-.primary{background:linear-gradient(135deg,#6edac6,#a7f3d0);color:#102a2a}.ghost{background:#f1fffb;color:#0f766e;border:1px solid var(--line)}.danger{background:#ffe4ee;color:#b83268}
-.quick{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}.quick button{background:#fff;border:1px solid var(--line);color:#1f2937;border-radius:999px;padding:9px 12px}
-.hidden{display:none}.settings{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.notice{background:#fff4bf;border:1px solid #f9e58c;color:#5f4b00;border-radius:18px;padding:14px;line-height:1.7;margin:12px 0}
-.progressShell{height:16px;background:#e8fff8;border:1px solid var(--line);border-radius:999px;overflow:hidden}.progressFill{height:100%;background:linear-gradient(90deg,#16a085,#8debd8);width:0%}
-.kpi{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:14px 0}.kpi div{background:#fff;border:1px solid var(--line);border-radius:18px;padding:14px}.kpi b{display:block;font-size:24px;margin-top:4px}
-.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);opacity:0;background:linear-gradient(135deg,#6edac6,#a7f3d0);color:#102a2a;padding:12px 16px;border-radius:999px;font-weight:900;transition:.2s;max-width:90vw}.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-@media(max-width:900px){.app,.hero,.grid,.row,.row2,.row3,.settings,.kpi{grid-template-columns:1fr}.side{position:relative;height:auto}.main{padding:18px}.hero h2{font-size:32px}}
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#b8f2e6" />
+  <title>开开的博士成长计划</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root {
+      --bg: #f4fffb;
+      --card: rgba(255,255,255,.88);
+      --text: #111827;
+      --sub: #4b5563;
+      --line: #d8f3ea;
+      --mint: #7ee7d4;
+      --green: #16a085;
+      --danger-bg: #ffe4ee;
+      --danger: #b83268;
+      --yellow: #fff4bf;
+      --shadow: 0 20px 55px rgba(94,203,184,.18);
+      --radius: 24px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, #dffbf4 0, #f4fffb 34%, transparent 60%),
+        radial-gradient(circle at bottom right, #b8f2e6 0, #f4fffb 30%, transparent 58%),
+        linear-gradient(135deg, #f4fffb, #ecfff8);
+    }
+    button, input, select, textarea { font: inherit; }
+    button { cursor: pointer; border: 0; border-radius: 15px; padding: 12px 14px; font-weight: 900; transition: .16s ease; }
+    button:hover { transform: translateY(-1px); }
+    input, select, textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 15px;
+      padding: 13px 14px;
+      background: #fff;
+      color: var(--text);
+      outline: none;
+    }
+    input:focus, select:focus, textarea:focus { border-color: #6edac6; box-shadow: 0 0 0 4px rgba(184,242,230,.45); }
+    textarea { min-height: 160px; line-height: 1.7; resize: vertical; }
+    .app { display: grid; grid-template-columns: 305px 1fr; min-height: 100vh; }
+    .side {
+      position: sticky; top: 0; height: 100vh; overflow: auto;
+      padding: 22px; background: rgba(255,255,255,.75); backdrop-filter: blur(16px);
+      border-right: 1px solid var(--line); display: flex; flex-direction: column; gap: 14px;
+    }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .logo { width: 50px; height: 50px; border-radius: 18px; display: grid; place-items: center; background: linear-gradient(135deg,#2dd4bf,#7dd3fc); color: #fff; font-size: 24px; font-weight: 900; box-shadow: var(--shadow); }
+    .brand h1 { margin: 0; font-size: 20px; line-height: 1.25; }
+    .brand p { margin: 5px 0 0; color: var(--sub); font-size: 13px; }
+    .card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); padding: 18px; }
+    .today-card { background: linear-gradient(135deg,#fff,#e8fff8); }
+    .status { display: inline-flex; border-radius: 999px; padding: 6px 10px; font-size: 12px; font-weight: 900; background: var(--yellow); color: #7a6510; }
+    .status.ok { background: #dffbf4; color: #064e3b; }
+    .status.warn { background: var(--danger-bg); color: var(--danger); }
+    .nav { display: grid; gap: 8px; }
+    .nav button { background: #fff; border: 1px solid var(--line); color: #1f2937; text-align: left; display: flex; justify-content: space-between; align-items: center; }
+    .nav button.on { background: linear-gradient(135deg,#dffbf4,#c8fff2); color: #064e3b; border-color: #7ee7d4; }
+    .primary { background: linear-gradient(135deg,#6edac6,#a7f3d0); color: #102a2a; }
+    .ghost { background: #f1fffb; color: #0f766e; border: 1px solid var(--line); }
+    .danger { background: var(--danger-bg); color: var(--danger); }
+    .main { width: 100%; max-width: 1180px; margin: 0 auto; padding: 28px; }
+    .hero { display: grid; grid-template-columns: 1fr 310px; gap: 18px; margin-bottom: 18px; }
+    .eyebrow { margin: 0 0 8px; color: #0f9f89; font-weight: 900; letter-spacing: .08em; }
+    .hero h2 { font-size: 40px; line-height: 1.12; margin: 0; }
+    .hero h2 span { background: linear-gradient(135deg,#10a88f,#5ecbb8); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .growth { background: linear-gradient(135deg,#8debd8,#b8f2e6 60%,#d9fff5); }
+    .growth strong { display: block; font-size: 34px; }
+    .bar { height: 12px; background: rgba(255,255,255,.75); border-radius: 999px; overflow: hidden; margin: 14px 0; }
+    .bar i { display: block; height: 100%; width: 0%; background: linear-gradient(90deg,#16a085,#c8fff2); }
+    .view-grid { display: grid; grid-template-columns: 1fr 340px; gap: 18px; }
+    .row-task { display: grid; grid-template-columns: 1fr 120px 140px 90px; gap: 10px; }
+    .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .row-3 { display: grid; grid-template-columns: 1.2fr 1fr 120px; gap: 10px; }
+    .quick { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+    .quick button { background: #fff; border: 1px solid var(--line); color: #1f2937; border-radius: 999px; padding: 9px 12px; }
+    .task-item { display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center; background: linear-gradient(135deg,#fff,#f2fffb); border: 1px solid var(--line); border-radius: 20px; padding: 14px; margin: 10px 0; }
+    .task-item.done { opacity: .62; }
+    .task-item.done .task-title { text-decoration: line-through; }
+    .check { width: 26px; height: 26px; padding: 0; border: 2px solid #93dcca; background: #fff; color: #fff; border-radius: 9px; }
+    .task-item.done .check { background: var(--green); }
+    .task-title { font-weight: 900; line-height: 1.4; }
+    .meta { color: var(--sub); font-size: 13px; margin-top: 6px; line-height: 1.65; }
+    .sub { color: var(--sub); line-height: 1.7; }
+    .hidden { display: none !important; }
+    .settings { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .notice { background: var(--yellow); color: #5f4b00; border: 1px solid #f9e58c; border-radius: 18px; padding: 14px; line-height: 1.7; margin: 12px 0; }
+    .progress-shell { height: 16px; border-radius: 999px; background: #e8fff8; border: 1px solid var(--line); overflow: hidden; margin: 14px 0; }
+    .progress-fill { height: 100%; width: 0%; background: linear-gradient(90deg,#16a085,#8debd8); }
+    .kpis { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-top: 14px; }
+    .kpis div { background: #fff; border: 1px solid var(--line); border-radius: 18px; padding: 14px; }
+    .kpis b { display: block; font-size: 23px; margin-top: 5px; }
+    .toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%) translateY(20px); opacity: 0; pointer-events: none; background: linear-gradient(135deg,#6edac6,#a7f3d0); color: #102a2a; padding: 12px 16px; border-radius: 999px; font-weight: 900; transition: .2s; box-shadow: var(--shadow); max-width: 90vw; }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    @media(max-width: 900px) {
+      .app, .hero, .view-grid, .row-task, .row-2, .row-3, .settings, .kpis { grid-template-columns: 1fr; }
+      .side { position: relative; height: auto; }
+      .main { padding: 18px; }
+      .hero h2 { font-size: 32px; }
+    }
+  </style>
 </head>
 <body>
 <div class="app">
-<aside class="side">
-  <div class="brand"><div class="logo">开</div><div><h1>开开的博士成长计划</h1><p>计划 · 论文 · 复盘 · 云同步</p></div></div>
-  <div class="card today"><b id="date"></b><p id="quote" class="sub"></p><span id="sync" class="badge">本地模式</span></div>
-  <div class="nav">
-    <button class="on" data-v="today">今日计划 <b id="nToday">0</b></button>
-    <button data-v="thesis">论文进度 <b id="nThesis">0%</b></button>
-    <button data-v="review">复盘归档 <b id="nDone">0</b></button>
-    <button data-v="report">周报月报 <b>2</b></button>
-    <button data-v="cloud">云同步 <b>3.2</b></button>
-  </div>
-  <button id="pushSide" class="ghost">推送云端</button>
-  <button id="pullSide" class="ghost">拉取云端</button>
-  <button id="export" class="ghost">导出全部</button>
-  <button id="clear" class="danger">清空本地</button>
-</aside>
-
-<main class="main">
-<section class="hero">
-  <div>
-    <p style="color:#0f9f89;font-weight:900;letter-spacing:.08em">KAIKAI PHD GROWTH PLAN</p>
-    <h2>把今天的小推进，叠成<span>博士成长曲线</span></h2>
-  </div>
-  <div class="card growth"><span>今日完成率</span><strong id="rate">0%</strong><div class="bar"><i id="bar"></i></div><small id="hint">先添加一个小任务，给今天点火。</small></div>
-</section>
-
-<section id="today" class="view grid">
-  <div class="card">
-    <h2>今日计划</h2>
-    <div class="row">
-      <input id="task" placeholder="例如：整理模型参数表">
-      <select id="type"><option>论文</option><option>模型</option><option>文献</option><option>组会</option><option>比赛</option><option>行政</option><option>生活</option></select>
-      <select id="pri"><option value="today">今天必须动</option><option value="week">本周推进</option><option value="low">有空再说</option></select>
-      <button id="add" class="primary">加入</button>
+  <aside class="side">
+    <div class="brand">
+      <div class="logo">开</div>
+      <div><h1>开开的博士成长计划</h1><p>计划 · 论文 · 复盘 · 云同步</p></div>
     </div>
-    <div class="quick">
-      <button data-t="读一篇文献，整理研究问题、方法、创新点和可借鉴处" data-type="文献">文献速读</button>
-      <button data-t="整理组会汇报：完成、卡点、下周计划各三行" data-type="组会">组会汇报</button>
-      <button data-t="检查模型报错日志，记录原因和下一步尝试" data-type="模型">模型排错</button>
-      <button data-t="推进论文正文一个小段落，至少写出200字" data-type="论文">论文推进</button>
+    <div class="card today-card">
+      <b id="dateText"></b>
+      <p class="sub" style="margin:8px 0 12px">博士成长不是冲刺，是每天可追踪的一点点推进。</p>
+      <span id="syncStatus" class="status">本地模式</span>
     </div>
-    <div id="list"></div>
-  </div>
-  <aside>
-    <div class="card"><h2>今日打卡</h2><input id="focus" placeholder="今日主线"><div class="row2" style="margin:10px 0"><select id="energy"><option>高</option><option selected>中</option><option>低</option></select><select id="mood"><option selected>稳定</option><option>焦虑</option><option>疲惫</option><option>兴奋</option></select></div><textarea id="note" placeholder="卡点、灵感、导师建议"></textarea><button id="saveDaily" class="primary" style="width:100%;margin-top:10px">保存打卡</button></div>
-    <div class="card" style="margin-top:18px"><h2>今日建议</h2><p id="advice" class="sub">先选一个 15 分钟能启动的任务。</p></div>
+    <div class="nav">
+      <button class="on" data-view="today">今日计划 <b id="countToday">0</b></button>
+      <button data-view="thesis">论文进度 <b id="countThesis">0%</b></button>
+      <button data-view="review">复盘归档 <b id="countDone">0</b></button>
+      <button data-view="report">周报月报 <b>2</b></button>
+      <button data-view="cloud">云同步 <b>3.2</b></button>
+    </div>
+    <button id="pushSideBtn" class="ghost">推送云端</button>
+    <button id="pullSideBtn" class="ghost">拉取云端</button>
+    <button id="exportBtn" class="ghost">导出全部</button>
+    <button id="clearBtn" class="danger">清空本地</button>
   </aside>
-</section>
 
-<section id="thesis" class="view card hidden">
-  <h2>论文进度</h2>
-  <div class="row3">
-    <input id="thesisTitle" placeholder="论文题目 / 当前研究主题">
-    <select id="thesisStage"><option>选题构思</option><option>文献综述</option><option>数据处理</option><option>模型构建</option><option>结果分析</option><option>论文写作</option><option>修改定稿</option><option>答辩准备</option></select>
-    <input id="thesisProgress" type="number" min="0" max="100" placeholder="进度%">
-  </div>
-  <div class="progressShell" style="margin:14px 0"><div id="thesisBar" class="progressFill"></div></div>
-  <div class="row2">
-    <textarea id="thesisDone" placeholder="已完成：例如 完成研究框架、跑通模型、整理5篇核心文献"></textarea>
-    <textarea id="thesisNext" placeholder="下一步：例如 补充理论机制、清洗数据、写方法部分"></textarea>
-  </div>
-  <textarea id="thesisBlockers" style="margin-top:10px" placeholder="当前卡点 / 需要导师反馈的问题"></textarea>
-  <button id="saveThesis" class="primary" style="margin-top:10px">保存论文进度</button>
-  <div class="kpi">
-    <div><span class="sub">当前阶段</span><b id="thesisStageView">-</b></div>
-    <div><span class="sub">总体进度</span><b id="thesisProgressView">0%</b></div>
-    <div><span class="sub">最近更新</span><b id="thesisUpdatedView">-</b></div>
-  </div>
-</section>
+  <main class="main">
+    <section class="hero">
+      <div class="card">
+        <p class="eyebrow">KAIKAI PHD GROWTH PLAN</p>
+        <h2>把今天的小推进，叠成<span>博士成长曲线</span></h2>
+      </div>
+      <div class="card growth">
+        <span>今日完成率</span>
+        <strong id="rateText">0%</strong>
+        <div class="bar"><i id="rateBar"></i></div>
+        <small id="rateHint">先添加一个小任务，给今天点火。</small>
+      </div>
+    </section>
 
-<section id="review" class="view card hidden">
-  <h2>复盘归档</h2>
-  <button id="genReview" class="primary">生成复盘</button> <button id="saveReview" class="ghost">保存归档</button>
-  <textarea id="reviewText" style="margin-top:12px" placeholder="点击生成复盘"></textarea>
-  <h3>成长档案</h3><div id="archive"></div>
-</section>
+    <section id="view-today" class="view view-grid">
+      <div class="card">
+        <h2>今日计划</h2>
+        <div class="row-task">
+          <input id="taskInput" placeholder="例如：整理模型参数表" />
+          <select id="typeInput"><option>论文</option><option>模型</option><option>文献</option><option>组会</option><option>比赛</option><option>行政</option><option>生活</option></select>
+          <select id="priorityInput"><option value="today">今天必须动</option><option value="week">本周推进</option><option value="low">有空再说</option></select>
+          <button id="addTaskBtn" class="primary">加入</button>
+        </div>
+        <div class="quick">
+          <button data-template="读一篇文献，整理研究问题、方法、创新点和可借鉴处" data-type="文献">文献速读</button>
+          <button data-template="整理组会汇报：完成、卡点、下周计划各三行" data-type="组会">组会汇报</button>
+          <button data-template="检查模型报错日志，记录原因和下一步尝试" data-type="模型">模型排错</button>
+          <button data-template="推进论文正文一个小段落，至少写出200字" data-type="论文">论文推进</button>
+        </div>
+        <div id="taskList"></div>
+      </div>
+      <aside>
+        <div class="card">
+          <h2>今日打卡</h2>
+          <input id="focusInput" placeholder="今日主线" />
+          <div class="row-2" style="margin:10px 0">
+            <select id="energyInput"><option>高</option><option selected>中</option><option>低</option></select>
+            <select id="moodInput"><option selected>稳定</option><option>焦虑</option><option>疲惫</option><option>兴奋</option></select>
+          </div>
+          <textarea id="noteInput" placeholder="卡点、灵感、导师建议"></textarea>
+          <button id="saveDailyBtn" class="primary" style="width:100%;margin-top:10px">保存打卡</button>
+        </div>
+        <div class="card" style="margin-top:18px"><h2>今日建议</h2><p id="adviceText" class="sub">先选一个 15 分钟能启动的任务。</p></div>
+      </aside>
+    </section>
 
-<section id="report" class="view card hidden">
-  <h2>周报 / 月报</h2>
-  <button id="week" class="primary">生成周报</button> <button id="month" class="ghost">生成月报</button>
-  <textarea id="reportText" style="margin-top:12px"></textarea>
-</section>
+    <section id="view-thesis" class="view card hidden">
+      <h2>论文进度</h2>
+      <div class="row-3">
+        <input id="thesisTitleInput" placeholder="论文题目 / 当前研究主题" />
+        <select id="thesisStageInput"><option>选题构思</option><option>文献综述</option><option>数据处理</option><option>模型构建</option><option>结果分析</option><option>论文写作</option><option>修改定稿</option><option>答辩准备</option></select>
+        <input id="thesisProgressInput" type="number" min="0" max="100" placeholder="进度%" />
+      </div>
+      <div class="progress-shell"><div id="thesisBar" class="progress-fill"></div></div>
+      <div class="row-2">
+        <textarea id="thesisDoneInput" placeholder="已完成：例如 完成研究框架、跑通模型、整理5篇核心文献"></textarea>
+        <textarea id="thesisNextInput" placeholder="下一步：例如 补充理论机制、清洗数据、写方法部分"></textarea>
+      </div>
+      <textarea id="thesisBlockersInput" style="margin-top:10px" placeholder="当前卡点 / 需要导师反馈的问题"></textarea>
+      <button id="saveThesisBtn" class="primary" style="margin-top:10px">保存论文进度</button>
+      <div class="kpis">
+        <div><span class="sub">当前阶段</span><b id="thesisStageView">-</b></div>
+        <div><span class="sub">总体进度</span><b id="thesisProgressView">0%</b></div>
+        <div><span class="sub">最近更新</span><b id="thesisUpdatedView">-</b></div>
+      </div>
+    </section>
 
-<section id="cloud" class="view card hidden">
-  <h2>Supabase 云同步</h2>
-  <div class="notice"><b>只填写 Project URL 和 anon public key，不要填 service_role key。</b></div>
-  <div class="settings"><input id="url" placeholder="Supabase Project URL"><input id="anon" placeholder="Supabase anon public key"><input id="email" placeholder="邮箱"><input id="pwd" type="password" placeholder="密码，至少6位"></div>
-  <div class="quick"><button id="test" class="ghost">测试配置</button><button id="signup" class="ghost">注册</button><button id="login" class="primary">登录</button><button id="push" class="ghost">推送云端</button><button id="pull" class="ghost">拉取云端</button><button id="logout" class="danger">退出</button></div>
-</section>
-</main>
+    <section id="view-review" class="view card hidden">
+      <h2>复盘归档</h2>
+      <button id="generateReviewBtn" class="primary">生成复盘</button>
+      <button id="saveReviewBtn" class="ghost">保存归档</button>
+      <textarea id="reviewText" style="margin-top:12px" placeholder="点击生成复盘"></textarea>
+      <h3>成长档案</h3>
+      <div id="archiveList"></div>
+    </section>
+
+    <section id="view-report" class="view card hidden">
+      <h2>周报 / 月报</h2>
+      <button id="weekReportBtn" class="primary">生成周报</button>
+      <button id="monthReportBtn" class="ghost">生成月报</button>
+      <textarea id="reportText" style="margin-top:12px"></textarea>
+    </section>
+
+    <section id="view-cloud" class="view card hidden">
+      <h2>Supabase 云同步</h2>
+      <div class="notice"><b>只填写 Project URL 和 anon public key，不要填 service_role key。</b></div>
+      <div class="settings">
+        <input id="supabaseUrlInput" placeholder="Supabase Project URL" />
+        <input id="supabaseAnonInput" placeholder="Supabase anon public key" />
+        <input id="emailInput" placeholder="邮箱" />
+        <input id="passwordInput" type="password" placeholder="密码，至少6位" />
+      </div>
+      <div class="quick">
+        <button id="testConfigBtn" class="ghost">测试配置</button>
+        <button id="signupBtn" class="ghost">注册</button>
+        <button id="loginBtn" class="primary">登录</button>
+        <button id="pushCloudBtn" class="ghost">推送云端</button>
+        <button id="pullCloudBtn" class="ghost">拉取云端</button>
+        <button id="logoutBtn" class="danger">退出</button>
+      </div>
+    </section>
+  </main>
 </div>
 <div id="toast" class="toast"></div>
 
 <script>
-const KEY='kaikai_growth_32', SET='kaikai_growth_32_settings', TODAY=new Date().toLocaleDateString('sv-SE');
-let state=JSON.parse(localStorage.getItem(KEY)||'{"tasks":[],"daily":{},"archive":{},"thesis":{}}');
-let settings=JSON.parse(localStorage.getItem(SET)||'{"url":"","anon":"","email":""}');
-let sb=null,user=null;const $=id=>document.getElementById(id);
-const lab={today:'今天必须动',week:'本周推进',low:'有空再说'};
-function toast(s){let t=$('toast');t.textContent=s;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200)}
-function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
-function fmt(iso){if(!iso)return '-';let d=new Date(iso);if(isNaN(d))return iso;return d.toLocaleString('zh-CN',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'})}
-function save(){localStorage.setItem(KEY,JSON.stringify(state));render()}
-function initDay(){state.daily[TODAY]??={focus:'',energy:'中',mood:'稳定',note:''};state.thesis??={title:'',stage:'选题构思',progress:0,done:'',next:'',blockers:'',updatedAt:''}}
-function migrate(){initDay();state.tasks=(state.tasks||[]).map(t=>{t.assignedAt??=(t.created?`${t.created}T09:00:00`:new Date().toISOString());t.assignedDate??=(t.created||TODAY);t.due??=(t.created||TODAY);t.carryCount??=0;t.type??='论文';t.pri??='today';t.done??=false;t.completedAt??=(t.completed?`${t.completed}T18:00:00`:null);return t});carryOver();localStorage.setItem(KEY,JSON.stringify(state))}
-function carryOver(){let changed=false;state.tasks.forEach(t=>{if(!t.done&&t.due<TODAY){t.previousDue=t.due;t.due=TODAY;t.carryCount=(t.carryCount||0)+1;changed=true}});if(changed)toast('昨日未完成任务已自动叠加到今天')}
-function client(){if(!window.supabase){toast('Supabase SDK 未加载，检查网络/CDN');return null}settings.url=$('url').value.trim();settings.anon=$('anon').value.trim();settings.email=$('email').value.trim();localStorage.setItem(SET,JSON.stringify(settings));if(!settings.url||!settings.anon){toast('先填写 URL 和 anon key');return null}sb=window.supabase.createClient(settings.url,settings.anon);return sb}
-async function refresh(){if(!sb&&settings.url&&settings.anon)sb=window.supabase.createClient(settings.url,settings.anon);if(!sb)return null;let {data}=await sb.auth.getUser();user=data.user;return user}
-async function test(){if(!client())return;toast('配置可用，下一步注册或登录');renderSync()}
-async function signup(){if(!client())return;let {data,error}=await sb.auth.signUp({email:$('email').value.trim(),password:$('pwd').value});if(error)return toast('注册失败：'+error.message);user=data.user;toast(data.session?'注册并登录成功':'注册成功，请邮箱确认后登录');renderSync()}
-async function login(){if(!client())return;let {data,error}=await sb.auth.signInWithPassword({email:$('email').value.trim(),password:$('pwd').value});if(error)return toast('登录失败：'+error.message);user=data.user;toast('登录成功');renderSync()}
-async function logout(){if(sb)await sb.auth.signOut();user=null;toast('已退出');renderSync()}
-async function push(){if(!sb&&settings.url&&settings.anon)sb=window.supabase.createClient(settings.url,settings.anon);await refresh();if(!user){show('cloud');return toast('请先登录')}let {error}=await sb.from('research_growth_states').upsert({user_id:user.id,state,updated_at:new Date().toISOString()},{onConflict:'user_id'});if(error)return toast('推送失败：'+error.message);toast('已推送云端');renderSync()}
-async function pull(){if(!sb&&settings.url&&settings.anon)sb=window.supabase.createClient(settings.url,settings.anon);await refresh();if(!user){show('cloud');return toast('请先登录')}let {data,error}=await sb.from('research_growth_states').select('state').eq('user_id',user.id).maybeSingle();if(error)return toast('拉取失败：'+error.message);if(!data)return toast('云端还没有数据，先推送一次');state=Object.assign({tasks:[],daily:{},archive:{},thesis:{}},data.state);migrate();fillDaily();fillThesis();render();toast('已拉取云端')}
-function add(text,type,pri){text=text||$('task').value.trim();if(!text)return toast('先写一个具体动作');let id=crypto.randomUUID?crypto.randomUUID():Date.now()+'';let now=new Date().toISOString();state.tasks.unshift({id,text,type:type||$('type').value,pri:pri||$('pri').value,done:false,assignedAt:now,assignedDate:TODAY,created:TODAY,due:TODAY,completed:null,completedAt:null,carryCount:0});$('task').value='';save()}
-function toggle(id){state.tasks=state.tasks.map(t=>{if(t.id!==id)return t;let done=!t.done;return {...t,done,completed:done?TODAY:null,completedAt:done?new Date().toISOString():null}});save()}
-function del(id){state.tasks=state.tasks.filter(t=>t.id!==id);save()}
-function todayTasks(){return state.tasks.filter(t=>!t.done&&t.due<=TODAY).sort((a,b)=>({today:0,week:1,low:2}[a.pri]-{today:0,week:1,low:2}[b.pri]||new Date(a.assignedAt)-new Date(b.assignedAt))}
-function renderTasks(){let arr=todayTasks();$('list').innerHTML=arr.length?arr.map(t=>`<div class="task ${t.done?'done':''}"><button class="check" onclick="toggle('${t.id}')">${t.done?'✓':''}</button><div><div class="title">${esc(t.text)}</div><div class="meta">${esc(t.type)} · ${lab[t.pri]} · 布置：${fmt(t.assignedAt)}${t.completedAt?' · 完成：'+fmt(t.completedAt):''}${t.carryCount?' · 已叠加 '+t.carryCount+' 天':''}</div></div><button class="ghost" onclick="del('${t.id}')">删除</button></div>`).join(''):'<p class="sub">这里暂时很安静，写一个15分钟能启动的小动作吧。</p>'}
-function saveDaily(){state.daily[TODAY]={focus:$('focus').value,energy:$('energy').value,mood:$('mood').value,note:$('note').value};save();toast('打卡已保存')}
-function fillDaily(){initDay();let d=state.daily[TODAY];$('focus').value=d.focus||'';$('energy').value=d.energy||'中';$('mood').value=d.mood||'稳定';$('note').value=d.note||''}
-function saveThesis(){state.thesis={title:$('thesisTitle').value,stage:$('thesisStage').value,progress:Math.max(0,Math.min(100,Number($('thesisProgress').value||0))),done:$('thesisDone').value,next:$('thesisNext').value,blockers:$('thesisBlockers').value,updatedAt:new Date().toISOString()};save();toast('论文进度已保存')}
-function fillThesis(){initDay();let t=state.thesis;$('thesisTitle').value=t.title||'';$('thesisStage').value=t.stage||'选题构思';$('thesisProgress').value=t.progress||0;$('thesisDone').value=t.done||'';$('thesisNext').value=t.next||'';$('thesisBlockers').value=t.blockers||''}
-function renderThesis(){let t=state.thesis||{},p=Number(t.progress||0);$('thesisBar').style.width=p+'%';$('thesisProgressView').textContent=p+'%';$('thesisStageView').textContent=t.stage||'-';$('thesisUpdatedView').textContent=t.updatedAt?new Date(t.updatedAt).toLocaleDateString('zh-CN'):'-';$('nThesis').textContent=p+'%'}
-function review(){initDay();let d=state.daily[TODAY],done=state.tasks.filter(t=>t.completed===TODAY),left=todayTasks(),th=state.thesis||{};$('reviewText').value=`【${TODAY} 开开的博士成长复盘】\n\n一、今日主线\n${d.focus||'未填写'}\n\n二、论文进度\n题目/主题：${th.title||'未填写'}\n阶段：${th.stage||'-'}\n总体进度：${th.progress||0}%\n下一步：${th.next||'未填写'}\n\n三、今日状态\n精力：${d.energy||'中'}\n状态：${d.mood||'稳定'}\n\n四、今日完成\n${done.length?done.map((t,i)=>`${i+1}. ${t.text}（${t.type}，布置：${fmt(t.assignedAt)}，完成：${fmt(t.completedAt)}）`).join('\n'):'暂无完成任务'}\n\n五、仍需推进\n${left.length?left.map((t,i)=>`${i+1}. ${t.text}（${lab[t.pri]}，已叠加${t.carryCount||0}天）`).join('\n'):'今日主线已基本清空'}\n\n六、记录与卡点\n${d.note||'暂无记录'}\n\n七、明日建议\n${advice()}`}
-function saveRev(){let text=$('reviewText').value.trim();if(!text)return toast('先生成复盘');state.archive[TODAY]={text,done:state.tasks.filter(t=>t.completed===TODAY).length};save();toast('已归档')}
-function renderArchive(){let keys=Object.keys(state.archive).sort().reverse();$('archive').innerHTML=keys.length?keys.map(k=>`<div class="task"><div><b>${k}</b><div class="meta">完成 ${state.archive[k].done||0} 项</div></div><button class="ghost" onclick="$('reviewText').value=state.archive['${k}'].text">查看</button></div>`).join(''):'<p class="sub">还没有归档。</p>';$('nDone').textContent=state.tasks.filter(t=>t.completed===TODAY).length}
-function report(days){let end=new Date(),start=new Date();start.setDate(end.getDate()-days+1);let sk=start.toLocaleDateString('sv-SE'),done=state.tasks.filter(t=>t.completed&&t.completed>=sk),left=state.tasks.filter(t=>!t.done),th=state.thesis||{};$('reportText').value=`【开开的博士成长${days===7?'周报':'月报'}】\n周期：${sk} 至 ${TODAY}\n\n一、论文进度\n题目/主题：${th.title||'未填写'}\n阶段：${th.stage||'-'}\n总体进度：${th.progress||0}%\n已完成：${th.done||'未填写'}\n下一步：${th.next||'未填写'}\n卡点：${th.blockers||'未填写'}\n\n二、完成概况\n完成 ${done.length} 项。\n\n三、代表性完成\n${done.length?done.map((t,i)=>`${i+1}. ${t.text}（${t.type}，布置：${fmt(t.assignedAt)}，完成：${fmt(t.completedAt)}）`).join('\n'):'暂无完成记录'}\n\n四、遗留任务\n${left.length?left.slice(0,10).map((t,i)=>`${i+1}. ${t.text}（${lab[t.pri]}，布置：${fmt(t.assignedAt)}，叠加${t.carryCount||0}天）`).join('\n'):'暂无遗留任务'}\n\n五、下阶段建议\n1. 每天只保留1个主线任务+2个辅助任务。\n2. 把高频卡点沉淀成固定流程。\n3. 周末用20分钟回看成长档案。`;show('report')}
-function advice(){let left=todayTasks().length,done=state.tasks.filter(t=>t.completed===TODAY).length;if(left>=4)return'今天任务偏多，建议只保留3个核心任务，其余移入本周。';if(done===0)return'先完成一个15分钟任务，给大脑一个启动信号。';return'保持节奏，明天优先处理一个最影响进度的卡点。'}
-function renderStats(){let all=state.tasks.filter(t=>t.due===TODAY||t.completed===TODAY),done=state.tasks.filter(t=>t.completed===TODAY),rate=all.length?Math.round(done.length/all.length*100):0;$('rate').textContent=rate+'%';$('bar').style.width=rate+'%';$('hint').textContent=all.length?`今日已完成 ${done.length}/${all.length} 项`:'先添加一个小任务，给今天点火';$('nToday').textContent=todayTasks().length;$('advice').textContent=advice()}
-function renderSync(){let s=$('sync');if(user){s.textContent='Supabase 已登录';s.className='badge ok'}else if(settings.url&&settings.anon){s.textContent='已配置未登录';s.className='badge'}else{s.textContent='本地模式';s.className='badge'}}
-function render(){renderTasks();renderStats();renderArchive();renderSync();renderThesis();$('date').textContent=new Date().toLocaleDateString('zh-CN',{month:'long',day:'numeric',weekday:'long'});$('quote').textContent='博士成长不是冲刺，是每天可追踪的一点点推进。'}
-function show(v){document.querySelectorAll('.view').forEach(x=>x.classList.add('hidden'));$(v).classList.remove('hidden');document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===v))}
-function exportAll(){let th=state.thesis||{};let lines=['# 开开的博士成长计划导出','',`导出时间：${fmt(new Date().toISOString())}`,'','## 论文进度',`- 题目/主题：${th.title||''}`,`- 当前阶段：${th.stage||''}`,`- 总体进度：${th.progress||0}%`,`- 已完成：${(th.done||'').replace(/\n/g,'；')}`,`- 下一步：${(th.next||'').replace(/\n/g,'；')}`,`- 卡点/需反馈：${(th.blockers||'').replace(/\n/g,'；')}`,`- 最近更新：${fmt(th.updatedAt)}`,'','## 任务记录',...state.tasks.map(t=>`- [${t.done?'x':' '}] ${t.text} #${t.type} #${lab[t.pri]} | 布置时间：${fmt(t.assignedAt)} | 完成时间：${t.completedAt?fmt(t.completedAt):'未完成'} | 当前待办日期：${t.due||t.created||''} | 叠加天数：${t.carryCount||0}`),'','## 成长档案',...Object.keys(state.archive).sort().map(k=>`### ${k}\n${state.archive[k].text}`)];let a=document.createElement('a');a.href=URL.createObjectURL(new Blob([lines.join('\n')],{type:'text/markdown;charset=utf-8'}));a.download='开开的博士成长计划_导出.md';a.click()}
-function bind(){$('add').onclick=()=>add();$('task').onkeydown=e=>{if(e.key==='Enter')add()};document.querySelectorAll('.quick button').forEach(b=>b.onclick=()=>{$('task').value=b.dataset.t;$('type').value=b.dataset.type});document.querySelectorAll('.nav button').forEach(b=>b.onclick=()=>show(b.dataset.v));$('saveDaily').onclick=saveDaily;$('saveThesis').onclick=saveThesis;$('genReview').onclick=review;$('saveReview').onclick=saveRev;$('week').onclick=()=>report(7);$('month').onclick=()=>report(30);$('test').onclick=test;$('signup').onclick=signup;$('login').onclick=login;$('logout').onclick=logout;$('push').onclick=push;$('pull').onclick=pull;$('pushSide').onclick=push;$('pullSide').onclick=pull;$('export').onclick=exportAll;$('clear').onclick=()=>{if(confirm('清空本地数据？云端不会自动删除。')){state={tasks:[],daily:{},archive:{},thesis:{}};migrate();fillDaily();fillThesis();save()}}}
-async function init(){migrate();$('url').value=settings.url||'';$('anon').value=settings.anon||'';$('email').value=settings.email||'';if(settings.url&&settings.anon&&window.supabase){sb=window.supabase.createClient(settings.url,settings.anon);await refresh()}if(!state.tasks.length){state.tasks=[{id:'demo1',text:'确定今天最重要的科研主线，并拆成一个15分钟动作',type:'论文',pri:'today',done:false,assignedAt:new Date().toISOString(),assignedDate:TODAY,created:TODAY,due:TODAY,completed:null,completedAt:null,carryCount:0},{id:'demo2',text:'整理组会汇报：完成、卡点、下周计划各写三行',type:'组会',pri:'week',done:false,assignedAt:new Date().toISOString(),assignedDate:TODAY,created:TODAY,due:TODAY,completed:null,completedAt:null,carryCount:0}];localStorage.setItem(KEY,JSON.stringify(state))}bind();fillDaily();fillThesis();render()}
+const STORAGE_KEY = 'kaikai_growth_32';
+const SETTINGS_KEY = 'kaikai_growth_32_settings';
+const TODAY = toDateKey(new Date());
+const priorityLabel = { today: '今天必须动', week: '本周推进', low: '有空再说' };
+let state = loadState();
+let settings = loadSettings();
+let supabaseClient = null;
+let currentUser = null;
+
+function $(id) { return document.getElementById(id); }
+function toDateKey(date) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+function parseDateKey(key) { return new Date(`${key}T00:00:00`); }
+function daysBetween(a, b) { return Math.max(0, Math.floor((parseDateKey(b) - parseDateKey(a)) / 86400000)); }
+function loadState() {
+  try { return Object.assign({ tasks: [], daily: {}, archive: {}, thesis: {} }, JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}')); }
+  catch { return { tasks: [], daily: {}, archive: {}, thesis: {} }; }
+}
+function loadSettings() {
+  try { return Object.assign({ url: '', anon: '', email: '' }, JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}')); }
+  catch { return { url: '', anon: '', email: '' }; }
+}
+function toast(message) {
+  const node = $('toast');
+  node.textContent = message;
+  node.classList.add('show');
+  setTimeout(() => node.classList.remove('show'), 2200);
+}
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[ch]));
+}
+function formatTime(value) {
+  if (!value) return '-';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+}
+function saveLocal() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  render();
+}
+function ensureToday() {
+  if (!state.daily) state.daily = {};
+  if (!state.daily[TODAY]) state.daily[TODAY] = { focus: '', energy: '中', mood: '稳定', note: '' };
+  if (!state.thesis) state.thesis = { title: '', stage: '选题构思', progress: 0, done: '', next: '', blockers: '', updatedAt: '' };
+}
+function normalizeTask(task) {
+  const createdDate = task.createdDate || task.created || task.assignedDate || TODAY;
+  const completedDate = task.completedDate || task.completed || null;
+  const assignedAt = task.assignedAt || task.createdAt || `${createdDate}T09:00:00`;
+  return {
+    id: task.id || (crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random())),
+    text: task.text || '',
+    type: task.type || '论文',
+    priority: task.priority || task.pri || 'today',
+    done: Boolean(task.done),
+    createdDate,
+    dueDate: task.dueDate || task.due || createdDate,
+    assignedAt,
+    completedDate,
+    completedAt: task.completedAt || (completedDate ? `${completedDate}T18:00:00` : null),
+    carryCount: Number(task.carryCount || 0)
+  };
+}
+function migrateState() {
+  ensureToday();
+  state.tasks = (state.tasks || []).map(normalizeTask);
+  carryOverTasks();
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+function carryOverTasks() {
+  let count = 0;
+  state.tasks.forEach(task => {
+    if (!task.done && task.dueDate < TODAY) {
+      const add = daysBetween(task.dueDate, TODAY) || 1;
+      task.previousDueDate = task.dueDate;
+      task.dueDate = TODAY;
+      task.carryCount = Number(task.carryCount || 0) + add;
+      count += 1;
+    }
+  });
+  if (count) toast(`有 ${count} 个未完成任务已叠加到今天`);
+}
+function todayTasks() {
+  return state.tasks
+    .filter(task => !task.done && task.dueDate <= TODAY)
+    .sort((a, b) => {
+      const weights = { today: 0, week: 1, low: 2 };
+      return (weights[a.priority] ?? 9) - (weights[b.priority] ?? 9) || new Date(a.assignedAt) - new Date(b.assignedAt);
+    });
+}
+function addTask(text, type, priority) {
+  const taskText = (text || $('taskInput').value).trim();
+  if (!taskText) return toast('先写一个具体动作');
+  const now = new Date().toISOString();
+  state.tasks.unshift({
+    id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
+    text: taskText,
+    type: type || $('typeInput').value,
+    priority: priority || $('priorityInput').value,
+    done: false,
+    createdDate: TODAY,
+    dueDate: TODAY,
+    assignedAt: now,
+    completedDate: null,
+    completedAt: null,
+    carryCount: 0
+  });
+  $('taskInput').value = '';
+  saveLocal();
+}
+function toggleTask(id) {
+  state.tasks = state.tasks.map(task => {
+    if (task.id !== id) return task;
+    const done = !task.done;
+    return { ...task, done, completedDate: done ? TODAY : null, completedAt: done ? new Date().toISOString() : null };
+  });
+  saveLocal();
+}
+function deleteTask(id) {
+  state.tasks = state.tasks.filter(task => task.id !== id);
+  saveLocal();
+}
+function renderTasks() {
+  const tasks = todayTasks();
+  const list = $('taskList');
+  if (!tasks.length) {
+    list.innerHTML = '<p class="sub">这里暂时很安静，写一个 15 分钟能启动的小动作吧。</p>';
+    return;
+  }
+  list.innerHTML = tasks.map(task => `
+    <div class="task-item ${task.done ? 'done' : ''}">
+      <button class="check" onclick="toggleTask('${task.id}')">${task.done ? '✓' : ''}</button>
+      <div>
+        <div class="task-title">${escapeHtml(task.text)}</div>
+        <div class="meta">${escapeHtml(task.type)} · ${priorityLabel[task.priority] || task.priority} · 布置：${formatTime(task.assignedAt)}${task.completedAt ? ' · 完成：' + formatTime(task.completedAt) : ''}${task.carryCount ? ' · 已叠加 ' + task.carryCount + ' 天' : ''}</div>
+      </div>
+      <button class="ghost" onclick="deleteTask('${task.id}')">删除</button>
+    </div>
+  `).join('');
+}
+function saveDaily() {
+  state.daily[TODAY] = { focus: $('focusInput').value, energy: $('energyInput').value, mood: $('moodInput').value, note: $('noteInput').value };
+  saveLocal();
+  toast('打卡已保存');
+}
+function fillDaily() {
+  ensureToday();
+  const daily = state.daily[TODAY];
+  $('focusInput').value = daily.focus || '';
+  $('energyInput').value = daily.energy || '中';
+  $('moodInput').value = daily.mood || '稳定';
+  $('noteInput').value = daily.note || '';
+}
+function saveThesis() {
+  state.thesis = {
+    title: $('thesisTitleInput').value,
+    stage: $('thesisStageInput').value,
+    progress: Math.max(0, Math.min(100, Number($('thesisProgressInput').value || 0))),
+    done: $('thesisDoneInput').value,
+    next: $('thesisNextInput').value,
+    blockers: $('thesisBlockersInput').value,
+    updatedAt: new Date().toISOString()
+  };
+  saveLocal();
+  toast('论文进度已保存');
+}
+function fillThesis() {
+  ensureToday();
+  const thesis = state.thesis || {};
+  $('thesisTitleInput').value = thesis.title || '';
+  $('thesisStageInput').value = thesis.stage || '选题构思';
+  $('thesisProgressInput').value = thesis.progress || 0;
+  $('thesisDoneInput').value = thesis.done || '';
+  $('thesisNextInput').value = thesis.next || '';
+  $('thesisBlockersInput').value = thesis.blockers || '';
+}
+function renderThesis() {
+  const thesis = state.thesis || {};
+  const progress = Number(thesis.progress || 0);
+  $('thesisBar').style.width = `${progress}%`;
+  $('thesisProgressView').textContent = `${progress}%`;
+  $('thesisStageView').textContent = thesis.stage || '-';
+  $('thesisUpdatedView').textContent = thesis.updatedAt ? new Date(thesis.updatedAt).toLocaleDateString('zh-CN') : '-';
+  $('countThesis').textContent = `${progress}%`;
+}
+function buildAdvice() {
+  const left = todayTasks().length;
+  const done = state.tasks.filter(task => task.completedDate === TODAY).length;
+  if (left >= 4) return '今天任务偏多，建议只保留 3 个核心任务，其余移入本周。';
+  if (done === 0) return '先完成一个 15 分钟任务，给大脑一个启动信号。';
+  return '保持节奏，明天优先处理一个最影响进度的卡点。';
+}
+function generateReview() {
+  ensureToday();
+  const daily = state.daily[TODAY];
+  const thesis = state.thesis || {};
+  const done = state.tasks.filter(task => task.completedDate === TODAY);
+  const left = todayTasks();
+  $('reviewText').value = `【${TODAY} 开开的博士成长复盘】
+
+一、今日主线
+${daily.focus || '未填写'}
+
+二、论文进度
+题目/主题：${thesis.title || '未填写'}
+阶段：${thesis.stage || '-'}
+总体进度：${thesis.progress || 0}%
+下一步：${thesis.next || '未填写'}
+
+三、今日状态
+精力：${daily.energy || '中'}
+状态：${daily.mood || '稳定'}
+
+四、今日完成
+${done.length ? done.map((task, index) => `${index + 1}. ${task.text}（${task.type}，布置：${formatTime(task.assignedAt)}，完成：${formatTime(task.completedAt)}）`).join('\n') : '暂无完成任务'}
+
+五、仍需推进
+${left.length ? left.map((task, index) => `${index + 1}. ${task.text}（${priorityLabel[task.priority] || task.priority}，已叠加 ${task.carryCount || 0} 天）`).join('\n') : '今日主线已基本清空'}
+
+六、记录与卡点
+${daily.note || '暂无记录'}
+
+七、明日建议
+${buildAdvice()}`;
+}
+function saveReview() {
+  const text = $('reviewText').value.trim();
+  if (!text) return toast('先生成复盘');
+  state.archive[TODAY] = { text, done: state.tasks.filter(task => task.completedDate === TODAY).length, savedAt: new Date().toISOString() };
+  saveLocal();
+  toast('已归档');
+}
+function renderArchive() {
+  const keys = Object.keys(state.archive || {}).sort().reverse();
+  $('archiveList').innerHTML = keys.length ? keys.map(key => `
+    <div class="task-item">
+      <div><b>${key}</b><div class="meta">完成 ${state.archive[key].done || 0} 项</div></div>
+      <button class="ghost" onclick="loadArchive('${key}')">查看</button>
+    </div>
+  `).join('') : '<p class="sub">还没有归档。</p>';
+  $('countDone').textContent = state.tasks.filter(task => task.completedDate === TODAY).length;
+}
+function loadArchive(key) {
+  $('reviewText').value = state.archive[key].text || '';
+  showView('review');
+}
+function generateReport(days) {
+  const end = new Date();
+  const start = new Date();
+  start.setDate(end.getDate() - days + 1);
+  const startKey = toDateKey(start);
+  const done = state.tasks.filter(task => task.completedDate && task.completedDate >= startKey && task.completedDate <= TODAY);
+  const left = state.tasks.filter(task => !task.done);
+  const thesis = state.thesis || {};
+  $('reportText').value = `【开开的博士成长${days === 7 ? '周报' : '月报'}】
+周期：${startKey} 至 ${TODAY}
+
+一、论文进度
+题目/主题：${thesis.title || '未填写'}
+阶段：${thesis.stage || '-'}
+总体进度：${thesis.progress || 0}%
+已完成：${thesis.done || '未填写'}
+下一步：${thesis.next || '未填写'}
+卡点：${thesis.blockers || '未填写'}
+
+二、完成概况
+完成 ${done.length} 项。
+
+三、代表性完成
+${done.length ? done.map((task, index) => `${index + 1}. ${task.text}（${task.type}，布置：${formatTime(task.assignedAt)}，完成：${formatTime(task.completedAt)}）`).join('\n') : '暂无完成记录'}
+
+四、遗留任务
+${left.length ? left.slice(0, 10).map((task, index) => `${index + 1}. ${task.text}（${priorityLabel[task.priority] || task.priority}，布置：${formatTime(task.assignedAt)}，叠加 ${task.carryCount || 0} 天）`).join('\n') : '暂无遗留任务'}
+
+五、下阶段建议
+1. 每天只保留 1 个主线任务 + 2 个辅助任务。
+2. 把高频卡点沉淀成固定流程。
+3. 周末用 20 分钟回看成长档案。`;
+  showView('report');
+}
+function renderStats() {
+  const todayAll = state.tasks.filter(task => task.dueDate === TODAY || task.completedDate === TODAY);
+  const todayDone = state.tasks.filter(task => task.completedDate === TODAY);
+  const rate = todayAll.length ? Math.round(todayDone.length / todayAll.length * 100) : 0;
+  $('rateText').textContent = `${rate}%`;
+  $('rateBar').style.width = `${rate}%`;
+  $('rateHint').textContent = todayAll.length ? `今日已完成 ${todayDone.length}/${todayAll.length} 项` : '先添加一个小任务，给今天点火。';
+  $('countToday').textContent = todayTasks().length;
+  $('adviceText').textContent = buildAdvice();
+}
+function render() {
+  $('dateText').textContent = new Date().toLocaleDateString('zh-CN', { month: 'long', day: 'numeric', weekday: 'long' });
+  renderTasks();
+  renderStats();
+  renderArchive();
+  renderThesis();
+  renderSyncStatus();
+}
+function showView(view) {
+  document.querySelectorAll('.view').forEach(node => node.classList.add('hidden'));
+  $(`view-${view}`).classList.remove('hidden');
+  document.querySelectorAll('.nav button').forEach(btn => btn.classList.toggle('on', btn.dataset.view === view));
+}
+function exportAll() {
+  const thesis = state.thesis || {};
+  const lines = [
+    '# 开开的博士成长计划导出',
+    '',
+    `导出时间：${formatTime(new Date().toISOString())}`,
+    '',
+    '## 论文进度',
+    `- 题目/主题：${thesis.title || ''}`,
+    `- 当前阶段：${thesis.stage || ''}`,
+    `- 总体进度：${thesis.progress || 0}%`,
+    `- 已完成：${String(thesis.done || '').replace(/\n/g, '；')}`,
+    `- 下一步：${String(thesis.next || '').replace(/\n/g, '；')}`,
+    `- 卡点/需反馈：${String(thesis.blockers || '').replace(/\n/g, '；')}`,
+    `- 最近更新：${formatTime(thesis.updatedAt)}`,
+    '',
+    '## 任务记录',
+    ...state.tasks.map(task => `- [${task.done ? 'x' : ' '}] ${task.text} #${task.type} #${priorityLabel[task.priority] || task.priority} | 布置时间：${formatTime(task.assignedAt)} | 完成时间：${task.completedAt ? formatTime(task.completedAt) : '未完成'} | 当前待办日期：${task.dueDate || ''} | 叠加天数：${task.carryCount || 0}`),
+    '',
+    '## 成长档案',
+    ...Object.keys(state.archive || {}).sort().map(key => `### ${key}\n${state.archive[key].text || ''}`)
+  ];
+  const blob = new Blob([lines.join('\n')], { type: 'text/markdown;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = `开开的博士成长计划_${TODAY}.md`;
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  URL.revokeObjectURL(url);
+}
+function initSupabaseFromInputs() {
+  settings.url = $('supabaseUrlInput').value.trim();
+  settings.anon = $('supabaseAnonInput').value.trim();
+  settings.email = $('emailInput').value.trim();
+  localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+  if (!settings.url || !settings.anon) { toast('先填写 URL 和 anon key'); return null; }
+  if (!window.supabase) { toast('Supabase SDK 未加载，检查网络或 CDN'); return null; }
+  supabaseClient = window.supabase.createClient(settings.url, settings.anon);
+  return supabaseClient;
+}
+async function refreshUser() {
+  if (!supabaseClient && settings.url && settings.anon && window.supabase) supabaseClient = window.supabase.createClient(settings.url, settings.anon);
+  if (!supabaseClient) return null;
+  const { data } = await supabaseClient.auth.getUser();
+  currentUser = data.user || null;
+  return currentUser;
+}
+function renderSyncStatus() {
+  const node = $('syncStatus');
+  if (currentUser) { node.textContent = 'Supabase 已登录'; node.className = 'status ok'; }
+  else if (settings.url && settings.anon) { node.textContent = '已配置未登录'; node.className = 'status'; }
+  else { node.textContent = '本地模式'; node.className = 'status'; }
+}
+async function testConfig() {
+  if (!initSupabaseFromInputs()) return;
+  toast('配置可用，下一步注册或登录');
+  await refreshUser();
+  renderSyncStatus();
+}
+async function signup() {
+  if (!initSupabaseFromInputs()) return;
+  const email = $('emailInput').value.trim();
+  const password = $('passwordInput').value;
+  const { data, error } = await supabaseClient.auth.signUp({ email, password });
+  if (error) return toast(`注册失败：${error.message}`);
+  currentUser = data.user || null;
+  toast(data.session ? '注册并登录成功' : '注册成功，请邮箱确认后登录');
+  renderSyncStatus();
+}
+async function login() {
+  if (!initSupabaseFromInputs()) return;
+  const email = $('emailInput').value.trim();
+  const password = $('passwordInput').value;
+  const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+  if (error) return toast(`登录失败：${error.message}`);
+  currentUser = data.user;
+  toast('登录成功');
+  renderSyncStatus();
+}
+async function logout() {
+  if (supabaseClient) await supabaseClient.auth.signOut();
+  currentUser = null;
+  toast('已退出');
+  renderSyncStatus();
+}
+async function pushCloud() {
+  await refreshUser();
+  if (!currentUser) { showView('cloud'); return toast('请先登录'); }
+  const { error } = await supabaseClient.from('research_growth_states').upsert({ user_id: currentUser.id, state, updated_at: new Date().toISOString() }, { onConflict: 'user_id' });
+  if (error) return toast(`推送失败：${error.message}`);
+  toast('已推送云端');
+}
+async function pullCloud() {
+  await refreshUser();
+  if (!currentUser) { showView('cloud'); return toast('请先登录'); }
+  const { data, error } = await supabaseClient.from('research_growth_states').select('state').eq('user_id', currentUser.id).maybeSingle();
+  if (error) return toast(`拉取失败：${error.message}`);
+  if (!data || !data.state) return toast('云端还没有数据，先推送一次');
+  state = Object.assign({ tasks: [], daily: {}, archive: {}, thesis: {} }, data.state);
+  migrateState();
+  fillDaily();
+  fillThesis();
+  render();
+  toast('已拉取云端');
+}
+function bindEvents() {
+  $('addTaskBtn').addEventListener('click', () => addTask());
+  $('taskInput').addEventListener('keydown', event => { if (event.key === 'Enter') addTask(); });
+  document.querySelectorAll('.quick button[data-template]').forEach(btn => {
+    btn.addEventListener('click', () => { $('taskInput').value = btn.dataset.template; $('typeInput').value = btn.dataset.type || '论文'; });
+  });
+  document.querySelectorAll('.nav button').forEach(btn => btn.addEventListener('click', () => showView(btn.dataset.view)));
+  $('saveDailyBtn').addEventListener('click', saveDaily);
+  $('saveThesisBtn').addEventListener('click', saveThesis);
+  $('generateReviewBtn').addEventListener('click', generateReview);
+  $('saveReviewBtn').addEventListener('click', saveReview);
+  $('weekReportBtn').addEventListener('click', () => generateReport(7));
+  $('monthReportBtn').addEventListener('click', () => generateReport(30));
+  $('exportBtn').addEventListener('click', exportAll);
+  $('clearBtn').addEventListener('click', () => {
+    if (!confirm('清空本地数据？云端不会自动删除。')) return;
+    state = { tasks: [], daily: {}, archive: {}, thesis: {} };
+    migrateState();
+    fillDaily();
+    fillThesis();
+    saveLocal();
+  });
+  $('testConfigBtn').addEventListener('click', testConfig);
+  $('signupBtn').addEventListener('click', signup);
+  $('loginBtn').addEventListener('click', login);
+  $('logoutBtn').addEventListener('click', logout);
+  $('pushCloudBtn').addEventListener('click', pushCloud);
+  $('pullCloudBtn').addEventListener('click', pullCloud);
+  $('pushSideBtn').addEventListener('click', pushCloud);
+  $('pullSideBtn').addEventListener('click', pullCloud);
+}
+async function init() {
+  migrateState();
+  $('supabaseUrlInput').value = settings.url || '';
+  $('supabaseAnonInput').value = settings.anon || '';
+  $('emailInput').value = settings.email || '';
+  if (settings.url && settings.anon && window.supabase) {
+    supabaseClient = window.supabase.createClient(settings.url, settings.anon);
+    await refreshUser();
+  }
+  if (!state.tasks.length) {
+    state.tasks = [
+      normalizeTask({ id: 'demo1', text: '确定今天最重要的科研主线，并拆成一个15分钟动作', type: '论文', priority: 'today', createdDate: TODAY }),
+      normalizeTask({ id: 'demo2', text: '整理组会汇报：完成、卡点、下周计划各写三行', type: '组会', priority: 'week', createdDate: TODAY })
+    ];
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  }
+  bindEvents();
+  fillDaily();
+  fillThesis();
+  render();
+}
 init();
 </script>
 </body>
