@@ -68,7 +68,7 @@
     .ghost { background: #f1fffb; color: #0f766e; border: 1px solid var(--line); }
     .danger { background: var(--danger-bg); color: var(--danger); }
     .main { width: 100%; max-width: 1180px; margin: 0 auto; padding: 28px; }
-    .hero { display: grid; grid-template-columns: 1fr 310px; gap: 18px; margin-bottom: 18px; }
+    .hero { display: grid; grid-template-columns: 1fr 250px 250px; gap: 18px; margin-bottom: 18px; }
     .eyebrow { margin: 0 0 8px; color: #0f9f89; font-weight: 900; letter-spacing: .08em; }
     .hero h2 { font-size: 40px; line-height: 1.12; margin: 0; }
     .hero h2 span { background: linear-gradient(135deg,#10a88f,#5ecbb8); -webkit-background-clip: text; background-clip: text; color: transparent; }
@@ -77,11 +77,12 @@
     .bar { height: 12px; background: rgba(255,255,255,.75); border-radius: 999px; overflow: hidden; margin: 14px 0; }
     .bar i { display: block; height: 100%; width: 0%; background: linear-gradient(90deg,#16a085,#c8fff2); }
     .view-grid { display: grid; grid-template-columns: 1fr 340px; gap: 18px; }
-    .row-task { display: grid; grid-template-columns: 1fr 120px 140px 150px 90px; gap: 10px; align-items: end; }
+    .row-task { display: grid; grid-template-columns: minmax(280px,1fr) 120px 140px 150px 90px; gap: 10px; align-items: end; }
     .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     .row-3 { display: grid; grid-template-columns: 1.2fr 1fr 120px; gap: 10px; }
     .field { display: grid; gap: 6px; }
     .field span { color: var(--sub); font-size: 12px; font-weight: 900; }
+    .task-input { min-height: 76px; line-height: 1.55; resize: vertical; }
     .quick { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
     .quick button { background: #fff; border: 1px solid var(--line); color: #1f2937; border-radius: 999px; padding: 9px 12px; }
     .toolbar { display: grid; grid-template-columns: 1fr 150px 130px; gap: 10px; margin: 12px 0; }
@@ -111,6 +112,11 @@
     .notice { background: var(--yellow); color: #5f4b00; border: 1px solid #f9e58c; border-radius: 18px; padding: 14px; line-height: 1.7; margin: 12px 0; }
     .progress-shell { height: 16px; border-radius: 999px; background: #e8fff8; border: 1px solid var(--line); overflow: hidden; margin: 14px 0; }
     .progress-fill { height: 100%; width: 0%; background: linear-gradient(90deg,#16a085,#8debd8); }
+    .project-list { display: grid; gap: 12px; margin-top: 14px; }
+    .project-card { background: linear-gradient(135deg,#fff,#f2fffb); border: 1px solid var(--line); border-radius: 20px; padding: 14px; }
+    .project-head { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; }
+    .project-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
+    .project-actions button { padding: 9px 10px; border-radius: 12px; }
     .kpis { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-top: 14px; }
     .kpis div { background: #fff; border: 1px solid var(--line); border-radius: 18px; padding: 14px; }
     .kpis b { display: block; font-size: 23px; margin-top: 5px; }
@@ -129,7 +135,7 @@
   <aside class="side">
     <div class="brand">
       <div class="logo">开</div>
-      <div><h1>开开的博士成长计划</h1><p>计划 · 论文 · 复盘 · 云同步</p></div>
+      <div><h1>开开的博士成长计划</h1><p>计划 · 项目 · 复盘 · 云同步</p></div>
     </div>
     <div class="card today-card">
       <b id="dateText"></b>
@@ -138,10 +144,10 @@
     </div>
     <div class="nav">
       <button class="on" data-view="today">今日计划 <b id="countToday">0</b></button>
-      <button data-view="thesis">论文进度 <b id="countThesis">0%</b></button>
+      <button data-view="thesis">项目进度 <b id="countProject">0</b></button>
       <button data-view="review">复盘归档 <b id="countDone">0</b></button>
       <button data-view="report">周报月报 <b>2</b></button>
-      <button data-view="cloud">云同步 <b>3.4</b></button>
+      <button data-view="cloud">云同步 <b>3.5</b></button>
     </div>
     <button id="pushSideBtn" class="ghost">推送云端</button>
     <button id="pullSideBtn" class="ghost">拉取云端</button>
@@ -161,13 +167,19 @@
         <div class="bar"><i id="rateBar"></i></div>
         <small id="rateHint">先添加一个小任务，给今天点火。</small>
       </div>
+      <div class="card growth">
+        <span>本月完成率</span>
+        <strong id="monthRateText">0%</strong>
+        <div class="bar"><i id="monthRateBar"></i></div>
+        <small id="monthRateHint">本月还没有完成记录。</small>
+      </div>
     </section>
 
     <section id="view-today" class="view view-grid">
       <div class="card">
         <h2>今日计划</h2>
         <div class="row-task">
-          <label class="field"><span>任务动作</span><input id="taskInput" placeholder="例如：整理模型参数表" /></label>
+          <label class="field"><span>任务动作</span><textarea id="taskInput" class="task-input" placeholder="例如：整理模型参数表。支持写完整计划；按 Ctrl/⌘ + Enter 加入任务。"></textarea></label>
           <label class="field"><span>类型</span><select id="typeInput"><option>论文</option><option>模型</option><option>文献</option><option>组会</option><option>比赛</option><option>行政</option><option>生活</option></select></label>
           <label class="field"><span>优先级</span><select id="priorityInput"><option value="today">今天必须动</option><option value="week">本周推进</option><option value="low">有空再说</option></select></label>
           <label class="field"><span>计划日期</span><input id="dueDateInput" type="date" title="计划日期" /></label>
@@ -227,24 +239,33 @@
     </section>
 
     <section id="view-thesis" class="view card hidden">
-      <h2>论文进度</h2>
+      <h2>项目进度</h2>
+      <p class="sub">这里不只放论文，也可以新增专利、比赛、课题、课程或其他长期项目。</p>
       <div class="row-3">
-        <input id="thesisTitleInput" placeholder="论文题目 / 当前研究主题" />
-        <select id="thesisStageInput"><option>选题构思</option><option>文献综述</option><option>数据处理</option><option>模型构建</option><option>结果分析</option><option>论文写作</option><option>修改定稿</option><option>答辩准备</option></select>
-        <input id="thesisProgressInput" type="number" min="0" max="100" placeholder="进度%" />
+        <label class="field"><span>项目名称</span><input id="projectTitleInput" placeholder="例如：博士论文 / 专利A / 数模比赛" /></label>
+        <label class="field"><span>项目类型</span><select id="projectTypeInput"><option>论文</option><option>专利</option><option>课题</option><option>比赛</option><option>课程</option><option>行政</option><option>其他</option></select></label>
+        <label class="field"><span>进度%</span><input id="projectProgressInput" type="number" min="0" max="100" placeholder="进度%" /></label>
       </div>
-      <div class="progress-shell"><div id="thesisBar" class="progress-fill"></div></div>
-      <div class="row-2">
-        <textarea id="thesisDoneInput" placeholder="已完成：例如 完成研究框架、跑通模型、整理5篇核心文献"></textarea>
-        <textarea id="thesisNextInput" placeholder="下一步：例如 补充理论机制、清洗数据、写方法部分"></textarea>
+      <div class="row-2" style="margin-top:10px">
+        <label class="field"><span>当前阶段</span><input id="projectStageInput" placeholder="例如：选题构思 / 交底书 / 实验验证" /></label>
+        <label class="field"><span>目标日期</span><input id="projectTargetDateInput" type="date" /></label>
       </div>
-      <textarea id="thesisBlockersInput" style="margin-top:10px" placeholder="当前卡点 / 需要导师反馈的问题"></textarea>
-      <button id="saveThesisBtn" class="primary" style="margin-top:10px">保存论文进度</button>
+      <div class="row-2" style="margin-top:10px">
+        <textarea id="projectDoneInput" placeholder="已完成：例如 完成研究框架、跑通模型、整理5篇核心文献"></textarea>
+        <textarea id="projectNextInput" placeholder="下一步：例如 补充理论机制、清洗数据、写方法部分"></textarea>
+      </div>
+      <textarea id="projectBlockersInput" style="margin-top:10px" placeholder="当前卡点 / 需要导师或合作者反馈的问题"></textarea>
+      <input id="editingProjectId" type="hidden" />
+      <div class="quick">
+        <button id="saveProjectBtn" class="primary">保存项目</button>
+        <button id="resetProjectBtn" class="ghost">新建项目</button>
+      </div>
       <div class="kpis">
-        <div><span class="sub">当前阶段</span><b id="thesisStageView">-</b></div>
-        <div><span class="sub">总体进度</span><b id="thesisProgressView">0%</b></div>
-        <div><span class="sub">最近更新</span><b id="thesisUpdatedView">-</b></div>
+        <div><span class="sub">项目数量</span><b id="projectCountView">0</b></div>
+        <div><span class="sub">平均进度</span><b id="projectAverageView">0%</b></div>
+        <div><span class="sub">最近更新</span><b id="projectUpdatedView">-</b></div>
       </div>
+      <div id="projectList" class="project-list"></div>
     </section>
 
     <section id="view-review" class="view card hidden">
@@ -314,8 +335,8 @@ function toDateKey(date) {
 function parseDateKey(key) { return new Date(`${key}T00:00:00`); }
 function daysBetween(a, b) { return Math.max(0, Math.floor((parseDateKey(b) - parseDateKey(a)) / 86400000)); }
 function loadState() {
-  try { return Object.assign({ tasks: [], daily: {}, archive: {}, thesis: {}, focusSessions: [] }, JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}')); }
-  catch { return { tasks: [], daily: {}, archive: {}, thesis: {}, focusSessions: [] }; }
+  try { return Object.assign({ tasks: [], daily: {}, archive: {}, thesis: {}, projects: [], focusSessions: [] }, JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}')); }
+  catch { return { tasks: [], daily: {}, archive: {}, thesis: {}, projects: [], focusSessions: [] }; }
 }
 function loadSettings() {
   try { return Object.assign({ url: '', anon: '', email: '' }, JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}')); }
@@ -368,6 +389,7 @@ function ensureToday() {
   if (!state.daily) state.daily = {};
   if (!state.daily[TODAY]) state.daily[TODAY] = { focus: '', energy: '中', mood: '稳定', note: '', checked: false };
   if (!state.thesis) state.thesis = { title: '', stage: '选题构思', progress: 0, done: '', next: '', blockers: '', updatedAt: '' };
+  if (!Array.isArray(state.projects)) state.projects = [];
   if (!Array.isArray(state.focusSessions)) state.focusSessions = [];
 }
 function normalizeTask(task) {
@@ -391,9 +413,27 @@ function normalizeTask(task) {
 function migrateState() {
   ensureToday();
   state.tasks = (state.tasks || []).map(normalizeTask);
+  if ((!state.projects || !state.projects.length) && state.thesis && (state.thesis.title || state.thesis.done || state.thesis.next || state.thesis.blockers || Number(state.thesis.progress || 0))) {
+    state.projects = [normalizeProject({ ...state.thesis, type: '论文' })];
+  }
+  state.projects = (state.projects || []).map(normalizeProject);
   state.focusSessions = (state.focusSessions || []).map(normalizeFocusSession).filter(session => session.topic);
   carryOverTasks();
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+function normalizeProject(project) {
+  return {
+    id: project.id || (crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random())),
+    title: project.title || '',
+    type: project.type || '论文',
+    stage: project.stage || '构思中',
+    progress: Math.max(0, Math.min(100, Number(project.progress || 0))),
+    targetDate: project.targetDate || '',
+    done: project.done || '',
+    next: project.next || '',
+    blockers: project.blockers || '',
+    updatedAt: project.updatedAt || ''
+  };
 }
 function normalizeFocusSession(session) {
   const startedAt = session.startedAt || session.createdAt || new Date().toISOString();
@@ -569,37 +609,91 @@ function fillDaily() {
   $('moodInput').value = daily.mood || '稳定';
   $('noteInput').value = daily.note || '';
 }
-function saveThesis() {
-  state.thesis = {
-    title: $('thesisTitleInput').value,
-    stage: $('thesisStageInput').value,
-    progress: Math.max(0, Math.min(100, Number($('thesisProgressInput').value || 0))),
-    done: $('thesisDoneInput').value,
-    next: $('thesisNextInput').value,
-    blockers: $('thesisBlockersInput').value,
+function resetProjectForm() {
+  $('editingProjectId').value = '';
+  $('projectTitleInput').value = '';
+  $('projectTypeInput').value = '论文';
+  $('projectStageInput').value = '';
+  $('projectProgressInput').value = 0;
+  $('projectTargetDateInput').value = '';
+  $('projectDoneInput').value = '';
+  $('projectNextInput').value = '';
+  $('projectBlockersInput').value = '';
+}
+function saveProject() {
+  const title = $('projectTitleInput').value.trim();
+  if (!title) return toast('先填写项目名称');
+  const id = $('editingProjectId').value || (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()));
+  const project = normalizeProject({
+    id,
+    title,
+    type: $('projectTypeInput').value,
+    stage: $('projectStageInput').value.trim() || '推进中',
+    progress: $('projectProgressInput').value,
+    targetDate: $('projectTargetDateInput').value,
+    done: $('projectDoneInput').value,
+    next: $('projectNextInput').value,
+    blockers: $('projectBlockersInput').value,
     updatedAt: new Date().toISOString()
-  };
+  });
+  const index = state.projects.findIndex(item => item.id === id);
+  if (index >= 0) state.projects[index] = project;
+  else state.projects.unshift(project);
+  resetProjectForm();
   saveLocal();
-  toast('论文进度已保存');
+  toast('项目进度已保存');
 }
-function fillThesis() {
-  ensureToday();
-  const thesis = state.thesis || {};
-  $('thesisTitleInput').value = thesis.title || '';
-  $('thesisStageInput').value = thesis.stage || '选题构思';
-  $('thesisProgressInput').value = thesis.progress || 0;
-  $('thesisDoneInput').value = thesis.done || '';
-  $('thesisNextInput').value = thesis.next || '';
-  $('thesisBlockersInput').value = thesis.blockers || '';
+function editProject(id) {
+  const project = state.projects.find(item => item.id === id);
+  if (!project) return;
+  $('editingProjectId').value = project.id;
+  $('projectTitleInput').value = project.title || '';
+  $('projectTypeInput').value = project.type || '论文';
+  $('projectStageInput').value = project.stage || '';
+  $('projectProgressInput').value = project.progress || 0;
+  $('projectTargetDateInput').value = project.targetDate || '';
+  $('projectDoneInput').value = project.done || '';
+  $('projectNextInput').value = project.next || '';
+  $('projectBlockersInput').value = project.blockers || '';
+  showView('thesis');
+  toast('已载入项目，可继续编辑');
 }
-function renderThesis() {
-  const thesis = state.thesis || {};
-  const progress = Number(thesis.progress || 0);
-  $('thesisBar').style.width = `${progress}%`;
-  $('thesisProgressView').textContent = `${progress}%`;
-  $('thesisStageView').textContent = thesis.stage || '-';
-  $('thesisUpdatedView').textContent = thesis.updatedAt ? new Date(thesis.updatedAt).toLocaleDateString('zh-CN') : '-';
-  $('countThesis').textContent = `${progress}%`;
+function deleteProject(id) {
+  if (!confirm('删除这个项目进度？')) return;
+  state.projects = state.projects.filter(project => project.id !== id);
+  if ($('editingProjectId').value === id) resetProjectForm();
+  saveLocal();
+}
+function renderProjects() {
+  const projects = state.projects || [];
+  const average = projects.length ? Math.round(projects.reduce((sum, project) => sum + Number(project.progress || 0), 0) / projects.length) : 0;
+  const latest = projects.map(project => project.updatedAt).filter(Boolean).sort().pop();
+  $('projectCountView').textContent = projects.length;
+  $('projectAverageView').textContent = `${average}%`;
+  $('projectUpdatedView').textContent = latest ? new Date(latest).toLocaleDateString('zh-CN') : '-';
+  $('countProject').textContent = projects.length ? `${projects.length}项` : '0';
+  $('projectList').innerHTML = projects.length ? projects.map(project => `
+    <div class="project-card">
+      <div class="project-head">
+        <div>
+          <b>${escapeHtml(project.title)}</b>
+          <div class="meta">${escapeHtml(project.type)} · ${escapeHtml(project.stage || '-')} · 目标：${project.targetDate || '未设置'} · 更新：${formatTime(project.updatedAt)}</div>
+        </div>
+        <div class="project-actions">
+          <button class="ghost" onclick="editProject('${project.id}')">编辑</button>
+          <button class="danger" onclick="deleteProject('${project.id}')">删除</button>
+        </div>
+      </div>
+      <div class="progress-shell"><div class="progress-fill" style="width:${Number(project.progress || 0)}%"></div></div>
+      <div class="meta">已完成：${escapeHtml(String(project.done || '未填写')).replace(/\n/g, '；')}</div>
+      <div class="meta">下一步：${escapeHtml(String(project.next || '未填写')).replace(/\n/g, '；')}</div>
+      ${project.blockers ? `<div class="meta">卡点：${escapeHtml(String(project.blockers)).replace(/\n/g, '；')}</div>` : ''}
+    </div>
+  `).join('') : '<p class="sub">还没有项目。可以新增论文、专利、比赛或其他长期事项。</p>';
+}
+function projectSummary() {
+  const projects = state.projects || [];
+  return projects.length ? projects.map((project, index) => `${index + 1}. 【${project.type}】${project.title}：${project.progress || 0}%（${project.stage || '-'}），下一步：${String(project.next || '未填写').replace(/\n/g, '；')}`).join('\n') : '暂无项目进度';
 }
 function buildAdvice() {
   const left = todayTasks().length;
@@ -612,7 +706,7 @@ function generateReview(dateKey = selectedArchiveDate()) {
   ensureToday();
   if (!state.daily[dateKey]) state.daily[dateKey] = { focus: '', energy: '中', mood: '稳定', note: '', checked: false };
   const daily = state.daily[dateKey];
-  const thesis = state.thesis || {};
+  const projectsText = projectSummary();
   const done = state.tasks.filter(task => task.completedDate === dateKey);
   const left = sortTasks(state.tasks.filter(task => (!task.completedDate || task.completedDate > dateKey) && task.dueDate <= dateKey));
   $('archiveDateInput').value = dateKey;
@@ -621,11 +715,8 @@ function generateReview(dateKey = selectedArchiveDate()) {
 一、当日主线
 ${daily.focus || '未填写'}
 
-二、论文进度
-题目/主题：${thesis.title || '未填写'}
-阶段：${thesis.stage || '-'}
-总体进度：${thesis.progress || 0}%
-下一步：${thesis.next || '未填写'}
+二、项目进度
+${projectsText}
 
 三、当日状态
 精力：${daily.energy || '中'}
@@ -693,17 +784,12 @@ function generateReport(days) {
     return acc;
   }, {});
   const focusLines = Object.entries(focusTop).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([topic, minutes], index) => `${index + 1}. ${topic}：${minutes} 分钟`);
-  const thesis = state.thesis || {};
+  const projectsText = projectSummary();
   $('reportText').value = `【开开的博士成长${days === 7 ? '周报' : '月报'}】
 周期：${startKey} 至 ${TODAY}
 
-一、论文进度
-题目/主题：${thesis.title || '未填写'}
-阶段：${thesis.stage || '-'}
-总体进度：${thesis.progress || 0}%
-已完成：${thesis.done || '未填写'}
-下一步：${thesis.next || '未填写'}
-卡点：${thesis.blockers || '未填写'}
+一、项目进度
+${projectsText}
 
 二、完成概况
 完成 ${done.length} 项；专注 ${focusTotal} 分钟。
@@ -714,10 +800,10 @@ ${focusLines.length ? focusLines.join('\n') : '暂无专注记录'}
 四、代表性完成
 ${done.length ? done.map((task, index) => `${index + 1}. ${task.text}（${task.type}，布置：${formatTime(task.assignedAt)}，完成：${formatTime(task.completedAt)}）`).join('\n') : '暂无完成记录'}
 
-四、遗留任务
-${left.length ? left.slice(0, 10).map((task, index) => `${index + 1}. ${task.text}（${priorityLabel[task.priority] || task.priority}，布置：${formatTime(task.assignedAt)}，叠加 ${task.carryCount || 0} 天）`).join('\n') : '暂无遗留任务'}
+五、遗留任务
+${left.length ? left.slice(0, 10).map((task, index) => `${index + 1}. ${task.text}（${priorityLabel[task.priority] || task.priority}，计划：${task.dueDate || ''}，布置：${formatTime(task.assignedAt)}，叠加 ${task.carryCount || 0} 天）`).join('\n') : '暂无遗留任务'}
 
-五、下阶段建议
+六、下阶段建议
 1. 每天只保留 1 个主线任务 + 2 个辅助任务。
 2. 把高频卡点沉淀成固定流程。
 3. 周末用 20 分钟回看成长档案。`;
@@ -727,9 +813,16 @@ function renderStats() {
   const todayAll = state.tasks.filter(task => task.dueDate === TODAY || task.completedDate === TODAY);
   const todayDone = state.tasks.filter(task => task.completedDate === TODAY);
   const rate = todayAll.length ? Math.round(todayDone.length / todayAll.length * 100) : 0;
+  const monthStart = `${TODAY.slice(0, 8)}01`;
+  const monthAll = state.tasks.filter(task => (task.dueDate >= monthStart && task.dueDate <= TODAY) || (task.completedDate >= monthStart && task.completedDate <= TODAY));
+  const monthDone = state.tasks.filter(task => task.completedDate >= monthStart && task.completedDate <= TODAY);
+  const monthRate = monthAll.length ? Math.round(monthDone.length / monthAll.length * 100) : 0;
   $('rateText').textContent = `${rate}%`;
   $('rateBar').style.width = `${rate}%`;
   $('rateHint').textContent = todayAll.length ? `今日已完成 ${todayDone.length}/${todayAll.length} 项` : '先添加一个小任务，给今天点火。';
+  $('monthRateText').textContent = `${monthRate}%`;
+  $('monthRateBar').style.width = `${monthRate}%`;
+  $('monthRateHint').textContent = monthAll.length ? `本月已完成 ${monthDone.length}/${monthAll.length} 项` : '本月还没有计划任务。';
   $('countToday').textContent = todayTasks().length;
   $('adviceText').textContent = buildAdvice();
   $('overdueCount').textContent = state.tasks.filter(task => !task.done && Number(task.carryCount || 0) > 0).length;
@@ -742,7 +835,7 @@ function render() {
   renderStats();
   renderFocusLog();
   renderArchive();
-  renderThesis();
+  renderProjects();
   renderSyncStatus();
 }
 function showView(view) {
@@ -761,20 +854,13 @@ function copyReport() {
   navigator.clipboard.writeText(text).then(() => toast('报告已复制')).catch(() => toast('复制失败，请手动全选复制'));
 }
 function exportAll() {
-  const thesis = state.thesis || {};
   const lines = [
     '# 开开的博士成长计划导出',
     '',
     `导出时间：${formatTime(new Date().toISOString())}`,
     '',
-    '## 论文进度',
-    `- 题目/主题：${thesis.title || ''}`,
-    `- 当前阶段：${thesis.stage || ''}`,
-    `- 总体进度：${thesis.progress || 0}%`,
-    `- 已完成：${String(thesis.done || '').replace(/\n/g, '；')}`,
-    `- 下一步：${String(thesis.next || '').replace(/\n/g, '；')}`,
-    `- 卡点/需反馈：${String(thesis.blockers || '').replace(/\n/g, '；')}`,
-    `- 最近更新：${formatTime(thesis.updatedAt)}`,
+    '## 项目进度',
+    ...((state.projects || []).length ? state.projects.map(project => `- 【${project.type}】${project.title}：${project.progress || 0}% | 阶段：${project.stage || ''} | 目标：${project.targetDate || ''} | 下一步：${String(project.next || '').replace(/\n/g, '；')} | 卡点：${String(project.blockers || '').replace(/\n/g, '；')}`) : ['- 暂无项目进度']),
     '',
     '## 任务记录',
     ...state.tasks.map(task => `- [${task.done ? 'x' : ' '}] ${task.text} #${task.type} #${priorityLabel[task.priority] || task.priority} | 布置时间：${formatTime(task.assignedAt)} | 完成时间：${task.completedAt ? formatTime(task.completedAt) : '未完成'} | 当前待办日期：${task.dueDate || ''} | 叠加天数：${task.carryCount || 0}`),
@@ -863,10 +949,10 @@ async function pullCloud() {
   const { data, error } = await supabaseClient.from('research_growth_states').select('state').eq('user_id', currentUser.id).maybeSingle();
   if (error) return toast(`拉取失败：${error.message}`);
   if (!data || !data.state) return toast('云端还没有数据，先推送一次');
-  state = Object.assign({ tasks: [], daily: {}, archive: {}, thesis: {}, focusSessions: [] }, data.state);
+  state = Object.assign({ tasks: [], daily: {}, archive: {}, thesis: {}, projects: [], focusSessions: [] }, data.state);
   migrateState();
   fillDaily();
-  fillThesis();
+  resetProjectForm();
   render();
   toast('已拉取云端');
 }
@@ -914,13 +1000,14 @@ function resetTimer() {
 
 function bindEvents() {
   $('addTaskBtn').addEventListener('click', () => addTask());
-  $('taskInput').addEventListener('keydown', event => { if (event.key === 'Enter') addTask(); });
+  $('taskInput').addEventListener('keydown', event => { if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') addTask(); });
   document.querySelectorAll('.quick button[data-template]').forEach(btn => {
     btn.addEventListener('click', () => { $('taskInput').value = btn.dataset.template; $('typeInput').value = btn.dataset.type || '论文'; });
   });
   document.querySelectorAll('.nav button').forEach(btn => btn.addEventListener('click', () => showView(btn.dataset.view)));
   $('saveDailyBtn').addEventListener('click', saveDaily);
-  $('saveThesisBtn').addEventListener('click', saveThesis);
+  $('saveProjectBtn').addEventListener('click', saveProject);
+  $('resetProjectBtn').addEventListener('click', resetProjectForm);
   $('generateReviewBtn').addEventListener('click', () => generateReview());
   $('loadArchiveDateBtn').addEventListener('click', loadArchiveDate);
   $('archiveDateInput').addEventListener('change', loadArchiveDate);
@@ -935,10 +1022,10 @@ function bindEvents() {
   $('exportBtn').addEventListener('click', exportAll);
   $('clearBtn').addEventListener('click', () => {
     if (!confirm('清空本地数据？云端不会自动删除。')) return;
-    state = { tasks: [], daily: {}, archive: {}, thesis: {}, focusSessions: [] };
+    state = { tasks: [], daily: {}, archive: {}, thesis: {}, projects: [], focusSessions: [] };
     migrateState();
     fillDaily();
-    fillThesis();
+    resetProjectForm();
     saveLocal();
   });
   $('testConfigBtn').addEventListener('click', testConfig);
@@ -977,7 +1064,7 @@ async function init() {
   }
   bindEvents();
   fillDaily();
-  fillThesis();
+  resetProjectForm();
   render();
 }
 init();
