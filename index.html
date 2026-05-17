@@ -176,6 +176,7 @@
       <button class="on" data-view="today">今日计划 <b id="countToday">0</b></button>
       <button data-view="thesis">项目进度 <b id="countProject">0</b></button>
       <button data-view="review">复盘归档 <b id="countDone">0</b></button>
+      <button data-view="ai">AI复盘 <b>4.0</b></button>
       <button data-view="report">周报月报 <b>2</b></button>
       <button data-view="cloud">云同步 <b>4.0</b></button>
     </div>
@@ -314,20 +315,33 @@
         <button id="generateReviewBtn" class="primary">生成该日复盘</button>
       </div>
       <button id="saveReviewBtn" class="ghost">保存到所选日期</button>
-      <div class="ai-panel">
-        <h3>AI 数据复盘</h3>
-        <p class="sub">填写 OpenAI 兼容接口后，可把当前任务、项目、专注、精力和笔记汇总给 AI，生成更具体的复盘建议。API Key 只保存在本机浏览器，请勿在公共设备使用。</p>
-        <div class="settings">
-          <input id="aiEndpointInput" placeholder="AI 接口地址，如 https://api.openai.com/v1/chat/completions" />
-          <input id="aiModelInput" placeholder="模型名，如 gpt-4.1-mini" />
-          <input id="aiKeyInput" type="password" placeholder="AI API Key，仅本机保存" />
-          <button id="aiReviewBtn" class="primary">AI 复盘当前数据</button>
-        </div>
-        <textarea id="aiReviewText" style="margin-top:12px" placeholder="AI 复盘结果会显示在这里，也会追加到下方复盘正文。"></textarea>
-      </div>
       <textarea id="reviewText" style="margin-top:12px" placeholder="点击生成复盘"></textarea>
       <h3>成长档案</h3>
       <div id="archiveList"></div>
+    </section>
+
+    <section id="view-ai" class="view card hidden">
+      <h2>AI 数据复盘</h2>
+      <p class="sub">AI 复盘已拆成独立页面：前端只调用你自己的 Supabase Edge Function，真正的 DeepSeek / OpenAI 兼容接口由后端函数代请求。配置保存到当前登录账号，换设备登录后可读取。</p>
+      <div class="notice"><b>部署提示：</b>先运行 `schema.sql`，再部署 `supabase/functions/ai-review`。前端不会直接请求 DeepSeek；“测试后端通道”只验证函数和账号配置是否可用。</div>
+      <div class="ai-panel">
+        <h3>账号 AI 配置</h3>
+        <div class="settings">
+          <label class="field"><span>后端函数名</span><input id="aiFunctionInput" placeholder="ai-review" /></label>
+          <label class="field"><span>供应商</span><select id="aiProviderInput"><option value="deepseek">DeepSeek</option><option value="openai">OpenAI 兼容</option><option value="custom">自定义兼容接口</option></select></label>
+          <label class="field"><span>后端调用 Base URL</span><input id="aiBaseUrlInput" placeholder="https://api.deepseek.com" /></label>
+          <label class="field"><span>模型名</span><input id="aiModelInput" placeholder="deepseek-chat" /></label>
+          <label class="field"><span>API Key</span><input id="aiKeyInput" type="password" placeholder="保存到当前 Supabase 账号" /></label>
+          <label class="field"><span>配置状态</span><input id="aiStatusInput" readonly placeholder="未读取" /></label>
+        </div>
+        <div class="quick">
+          <button id="saveAiSettingsBtn" class="primary">保存到账号</button>
+          <button id="loadAiSettingsBtn" class="ghost">读取账号配置</button>
+          <button id="testAiBackendBtn" class="ghost">测试后端通道</button>
+          <button id="aiReviewBtn" class="primary">生成 AI 复盘</button>
+        </div>
+      </div>
+      <textarea id="aiReviewText" style="margin-top:12px" placeholder="AI 复盘结果会显示在这里，不会写入每日复盘归档。"></textarea>
     </section>
 
     <section id="view-report" class="view card hidden">
@@ -484,8 +498,8 @@ function loadState() {
   catch { return { tasks: [], daily: {}, archive: {}, thesis: {}, projects: [], focusSessions: [] }; }
 }
 function loadSettings() {
-  try { return Object.assign({ url: '', anon: '', email: '', theme: 'auto', aiEndpoint: 'https://api.openai.com/v1/chat/completions', aiModel: 'gpt-4.1-mini', aiKey: '' }, JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}')); }
-  catch { return { url: '', anon: '', email: '', theme: 'auto', aiEndpoint: 'https://api.openai.com/v1/chat/completions', aiModel: 'gpt-4.1-mini', aiKey: '' }; }
+  try { return Object.assign({ url: '', anon: '', email: '', theme: 'auto', aiFunction: 'ai-review', aiProvider: 'deepseek', aiBaseUrl: 'https://api.deepseek.com', aiModel: 'deepseek-chat' }, JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}')); }
+  catch { return { url: '', anon: '', email: '', theme: 'auto', aiFunction: 'ai-review', aiProvider: 'deepseek', aiBaseUrl: 'https://api.deepseek.com', aiModel: 'deepseek-chat' }; }
 }
 function toast(message) {
   const node = $('toast');
@@ -1084,47 +1098,104 @@ function buildAiReviewData() {
     }
   };
 }
-function saveAiSettingsFromInputs() {
-  settings.aiEndpoint = $('aiEndpointInput').value.trim() || 'https://api.openai.com/v1/chat/completions';
-  settings.aiModel = $('aiModelInput').value.trim() || 'gpt-4.1-mini';
-  settings.aiKey = $('aiKeyInput').value.trim();
+function aiFunctionName() { return $('aiFunctionInput').value.trim() || settings.aiFunction || 'ai-review'; }
+function readAiForm() {
+  return {
+    functionName: aiFunctionName(),
+    provider: $('aiProviderInput').value || 'deepseek',
+    apiBaseUrl: $('aiBaseUrlInput').value.trim() || 'https://api.deepseek.com',
+    model: $('aiModelInput').value.trim() || 'deepseek-chat',
+    apiKey: $('aiKeyInput').value.trim()
+  };
+}
+function fillAiForm(config = {}) {
+  $('aiFunctionInput').value = config.functionName || settings.aiFunction || 'ai-review';
+  $('aiProviderInput').value = config.provider || settings.aiProvider || 'deepseek';
+  $('aiBaseUrlInput').value = config.apiBaseUrl || settings.aiBaseUrl || 'https://api.deepseek.com';
+  $('aiModelInput').value = config.model || settings.aiModel || 'deepseek-chat';
+  if (config.apiKey !== undefined) $('aiKeyInput').value = config.apiKey || '';
+  $('aiStatusInput').value = config.status || '';
+}
+function rememberAiForm(config = readAiForm()) {
+  settings.aiFunction = config.functionName;
+  settings.aiProvider = config.provider;
+  settings.aiBaseUrl = config.apiBaseUrl;
+  settings.aiModel = config.model;
   localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
 }
-async function generateAiReview() {
-  saveAiSettingsFromInputs();
-  if (!settings.aiKey) return toast('先填写 AI API Key');
-  const button = $('aiReviewBtn');
-  button.disabled = true;
-  button.textContent = 'AI 复盘中...';
-  const payload = {
-    model: settings.aiModel,
-    messages: [
-      { role: 'system', content: '你是一个温柔但具体的博士成长教练。请基于用户提供的结构化数据，用中文输出简洁、可执行的复盘。' },
-      { role: 'user', content: `请分析这些成长数据，输出：1) 今日/近期模式洞察；2) 最大卡点；3) 明天最优先的3个行动；4) 鼓励但不空泛的一句话。数据：${JSON.stringify(buildAiReviewData())}` }
-    ],
-    temperature: 0.7
-  };
+async function ensureAiAccountReady() {
+  if (!initSupabaseFromInputs()) return false;
+  await refreshUser();
+  if (!currentUser) { showView('cloud'); toast('请先登录，再保存或使用账号 AI 配置'); return false; }
+  return true;
+}
+async function saveAiSettings() {
+  if (!await ensureAiAccountReady()) return;
+  const config = readAiForm();
+  if (!config.apiKey) return toast('请填写 API Key 后再保存到账号');
+  rememberAiForm(config);
+  const { error } = await supabaseClient.from('research_growth_ai_settings').upsert({
+    user_id: currentUser.id,
+    provider: config.provider,
+    api_base_url: config.apiBaseUrl,
+    model: config.model,
+    api_key: config.apiKey,
+    updated_at: new Date().toISOString()
+  }, { onConflict: 'user_id' });
+  if (error) return toast(`AI 配置保存失败：${error.message}`);
+  $('aiStatusInput').value = '已保存到当前账号';
+  toast('AI 配置已保存到账号');
+}
+async function loadAiSettings(options = {}) {
+  if (!supabaseClient && settings.url && settings.anon && window.supabase) supabaseClient = window.supabase.createClient(settings.url, settings.anon);
+  if (!supabaseClient) return false;
+  await refreshUser();
+  if (!currentUser) return false;
+  const { data, error } = await supabaseClient.from('research_growth_ai_settings').select('provider,api_base_url,model,api_key,updated_at').eq('user_id', currentUser.id).maybeSingle();
+  if (error) { if (!options.silent) toast(`读取 AI 配置失败：${error.message}`); return false; }
+  if (!data) { if (!options.silent) toast('账号还没有保存 AI 配置'); fillAiForm({ status: '账号未保存配置' }); return false; }
+  const config = { functionName: settings.aiFunction || 'ai-review', provider: data.provider || 'deepseek', apiBaseUrl: data.api_base_url || 'https://api.deepseek.com', model: data.model || 'deepseek-chat', apiKey: data.api_key || '', status: `已读取账号配置 · ${formatTime(data.updated_at)}` };
+  fillAiForm(config);
+  rememberAiForm(config);
+  if (!options.silent) toast('已读取账号 AI 配置');
+  return true;
+}
+async function callAiBackend(mode) {
+  if (!await ensureAiAccountReady()) return null;
+  rememberAiForm();
+  const { data, error } = await supabaseClient.functions.invoke(aiFunctionName(), { body: { mode, reviewData: mode === 'review' ? buildAiReviewData() : undefined } });
+  if (error) throw new Error(error.message || '后端函数调用失败');
+  if (data?.error) throw new Error(data.error);
+  return data;
+}
+async function testAiBackend() {
   try {
-    const res = await fetch(settings.aiEndpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${settings.aiKey}` },
-      body: JSON.stringify(payload)
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error?.message || `请求失败 ${res.status}`);
-    const text = data.choices?.[0]?.message?.content?.trim() || data.output_text || 'AI 没有返回文本';
+    $('aiStatusInput').value = '测试后端通道中...';
+    const data = await callAiBackend('test');
+    $('aiStatusInput').value = `后端可用 · ${data?.provider || 'unknown'} · ${data?.model || ''}`;
+    toast('AI 后端通道可用');
+  } catch (error) {
+    $('aiStatusInput').value = `测试失败：${error.message}`;
+    toast(`测试失败：${error.message}`);
+  }
+}
+async function generateAiReview() {
+  const button = $('aiReviewBtn');
+  try {
+    button.disabled = true;
+    button.textContent = 'AI 复盘中...';
+    const data = await callAiBackend('review');
+    const text = data?.text || 'AI 没有返回文本';
     $('aiReviewText').value = text;
-    $('reviewText').value = `${$('reviewText').value.trim()}
-
-九、AI 数据复盘
-${text}`.trim();
+    $('aiStatusInput').value = `复盘完成 · ${formatTime(new Date().toISOString())}`;
     toast('AI 复盘已生成');
   } catch (error) {
     $('aiReviewText').value = `AI 复盘失败：${error.message}`;
+    $('aiStatusInput').value = `复盘失败：${error.message}`;
     toast(`AI 复盘失败：${error.message}`);
   } finally {
     button.disabled = false;
-    button.textContent = 'AI 复盘当前数据';
+    button.textContent = '生成 AI 复盘';
   }
 }
 
@@ -1258,11 +1329,13 @@ async function login() {
   toast('登录成功，正在读取云端最新内容');
   const pulled = await pullCloud({ silent: true, keepView: true });
   if (!pulled) await pushCloud({ silent: true });
+  await loadAiSettings({ silent: true });
   renderSyncStatus('synced');
 }
 async function logout() {
   if (supabaseClient) await supabaseClient.auth.signOut();
   currentUser = null;
+  fillAiForm({ apiKey: '', status: '已退出，登录后读取账号配置' });
   toast('已退出');
   renderSyncStatus();
 }
@@ -1356,6 +1429,9 @@ function bindEvents() {
   $('loadArchiveDateBtn').addEventListener('click', loadArchiveDate);
   $('archiveDateInput').addEventListener('change', loadArchiveDate);
   $('saveReviewBtn').addEventListener('click', saveReview);
+  $('saveAiSettingsBtn').addEventListener('click', saveAiSettings);
+  $('loadAiSettingsBtn').addEventListener('click', () => loadAiSettings());
+  $('testAiBackendBtn').addEventListener('click', testAiBackend);
   $('aiReviewBtn').addEventListener('click', generateAiReview);
   $('weekReportBtn').addEventListener('click', () => generateReport(7));
   $('monthReportBtn').addEventListener('click', () => generateReport(30));
@@ -1393,9 +1469,7 @@ async function init() {
   $('supabaseUrlInput').value = settings.url || '';
   $('supabaseAnonInput').value = settings.anon || '';
   $('emailInput').value = settings.email || '';
-  $('aiEndpointInput').value = settings.aiEndpoint || 'https://api.openai.com/v1/chat/completions';
-  $('aiModelInput').value = settings.aiModel || 'gpt-4.1-mini';
-  $('aiKeyInput').value = settings.aiKey || '';
+  fillAiForm({ status: '等待登录后读取账号配置' });
   $('themeInput').value = settings.theme || 'auto';
   $('dueDateInput').value = TODAY;
   $('archiveDateInput').value = TODAY;
@@ -1407,7 +1481,10 @@ async function init() {
   if (settings.url && settings.anon && window.supabase) {
     supabaseClient = window.supabase.createClient(settings.url, settings.anon);
     await refreshUser();
-    if (currentUser) loadedRemote = await pullCloud({ silent: true, keepView: true });
+    if (currentUser) {
+      loadedRemote = await pullCloud({ silent: true, keepView: true });
+      await loadAiSettings({ silent: true });
+    }
   }
   if (!loadedRemote && !state.tasks.length) {
     state.tasks = [
