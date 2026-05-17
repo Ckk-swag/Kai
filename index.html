@@ -137,6 +137,17 @@
     .kpis b { display: block; font-size: 23px; margin-top: 5px; }
     .toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%) translateY(20px); opacity: 0; pointer-events: none; background: linear-gradient(135deg,var(--mint),var(--soft-card)); color: var(--theme-contrast); padding: 12px 16px; border-radius: 999px; font-weight: 900; transition: .2s; box-shadow: var(--shadow); max-width: 90vw; }
     .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    .task-section-title { margin: 18px 0 8px; color: var(--theme-contrast); font-size: 14px; font-weight: 900; letter-spacing: .04em; }
+    .celebration { position: fixed; inset: 0; display: grid; place-items: center; pointer-events: none; opacity: 0; z-index: 20; transition: opacity .25s ease; }
+    .celebration.show { opacity: 1; }
+    .celebration-bubble { position: relative; min-width: 260px; max-width: 86vw; padding: 20px 24px; border-radius: 28px; background: linear-gradient(135deg,#fff,var(--soft-card)); border: 1px solid var(--line); box-shadow: var(--shadow); color: var(--theme-contrast); text-align: center; font-weight: 900; transform: scale(.86); animation: pop .72s ease forwards; }
+    .celebration-bubble b { display: block; font-size: 26px; margin-bottom: 6px; }
+    .confetti { position: absolute; width: 10px; height: 16px; border-radius: 4px; background: var(--mint); animation: confetti 1.15s ease-out forwards; }
+    .ai-panel { margin-top: 14px; padding: 14px; border: 1px solid var(--line); border-radius: 20px; background: linear-gradient(135deg,#fff,var(--soft-card)); }
+    .ai-panel textarea { min-height: 120px; }
+    @keyframes pop { 0% { transform: scale(.78); opacity: .2; } 55% { transform: scale(1.05); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
+    @keyframes confetti { 0% { transform: translate(0,0) rotate(0deg); opacity: 1; } 100% { transform: translate(var(--dx),var(--dy)) rotate(520deg); opacity: 0; } }
     @media(max-width: 900px) {
       .app, .hero, .view-grid, .row-task, .row-2, .row-3, .settings, .kpis, .toolbar, .mini-grid { grid-template-columns: 1fr; }
       .side { position: relative; height: auto; }
@@ -166,7 +177,7 @@
       <button data-view="thesis">项目进度 <b id="countProject">0</b></button>
       <button data-view="review">复盘归档 <b id="countDone">0</b></button>
       <button data-view="report">周报月报 <b>2</b></button>
-      <button data-view="cloud">云同步 <b>3.9</b></button>
+      <button data-view="cloud">云同步 <b>4.0</b></button>
     </div>
     <button id="pushSideBtn" class="ghost">推送云端</button>
     <button id="pullSideBtn" class="ghost">拉取云端</button>
@@ -215,7 +226,7 @@
         <div class="toolbar">
           <input id="searchInput" placeholder="搜索任务关键词" />
           <select id="filterTypeInput"><option value="all">全部类型</option><option>论文</option><option>模型</option><option>文献</option><option>组会</option><option>比赛</option><option>行政</option><option>生活</option><option>运动</option></select>
-          <select id="scopeInput"><option value="today">今日待办</option><option value="all">全部未完成</option><option value="done">今日已完成</option><option value="doneAll">全部已完成</option></select>
+          <select id="scopeInput"><option value="today">今日待办</option><option value="allTasks">所有任务</option><option value="all">全部未完成</option><option value="done">今日已完成</option><option value="doneAll">全部已完成</option></select>
         </div>
         <div id="completedSummary" class="completed-summary"></div>
         <div class="mini-grid">
@@ -303,6 +314,17 @@
         <button id="generateReviewBtn" class="primary">生成该日复盘</button>
       </div>
       <button id="saveReviewBtn" class="ghost">保存到所选日期</button>
+      <div class="ai-panel">
+        <h3>AI 数据复盘</h3>
+        <p class="sub">填写 OpenAI 兼容接口后，可把当前任务、项目、专注、精力和笔记汇总给 AI，生成更具体的复盘建议。API Key 只保存在本机浏览器，请勿在公共设备使用。</p>
+        <div class="settings">
+          <input id="aiEndpointInput" placeholder="AI 接口地址，如 https://api.openai.com/v1/chat/completions" />
+          <input id="aiModelInput" placeholder="模型名，如 gpt-4.1-mini" />
+          <input id="aiKeyInput" type="password" placeholder="AI API Key，仅本机保存" />
+          <button id="aiReviewBtn" class="primary">AI 复盘当前数据</button>
+        </div>
+        <textarea id="aiReviewText" style="margin-top:12px" placeholder="AI 复盘结果会显示在这里，也会追加到下方复盘正文。"></textarea>
+      </div>
       <textarea id="reviewText" style="margin-top:12px" placeholder="点击生成复盘"></textarea>
       <h3>成长档案</h3>
       <div id="archiveList"></div>
@@ -337,6 +359,7 @@
   </main>
 </div>
 <div id="toast" class="toast"></div>
+<div id="celebration" class="celebration"></div>
 
 <script>
 const STORAGE_KEY = 'kaikai_growth_32';
@@ -461,8 +484,8 @@ function loadState() {
   catch { return { tasks: [], daily: {}, archive: {}, thesis: {}, projects: [], focusSessions: [] }; }
 }
 function loadSettings() {
-  try { return Object.assign({ url: '', anon: '', email: '', theme: 'auto' }, JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}')); }
-  catch { return { url: '', anon: '', email: '', theme: 'auto' }; }
+  try { return Object.assign({ url: '', anon: '', email: '', theme: 'auto', aiEndpoint: 'https://api.openai.com/v1/chat/completions', aiModel: 'gpt-4.1-mini', aiKey: '' }, JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}')); }
+  catch { return { url: '', anon: '', email: '', theme: 'auto', aiEndpoint: 'https://api.openai.com/v1/chat/completions', aiModel: 'gpt-4.1-mini', aiKey: '' }; }
 }
 function toast(message) {
   const node = $('toast');
@@ -616,10 +639,17 @@ function visibleTasks() {
   let tasks = [];
   if (scope === 'done') tasks = state.tasks.filter(task => task.completedDate === TODAY);
   else if (scope === 'doneAll') tasks = state.tasks.filter(task => task.done);
+  else if (scope === 'allTasks') tasks = state.tasks.slice();
   else if (scope === 'all') tasks = state.tasks.filter(task => !task.done);
   else tasks = todayTasks();
   tasks = tasks.filter(task => (filterType === 'all' || task.type === filterType) && (!keyword || task.text.toLowerCase().includes(keyword)));
+  if (scope === 'allTasks') return sortAllTasks(tasks);
   return sortTasks(tasks);
+}
+function sortAllTasks(tasks) {
+  const unfinished = sortTasks(tasks.filter(task => !task.done));
+  const completed = sortTasks(tasks.filter(task => task.done)).sort((a, b) => new Date(b.completedAt || 0) - new Date(a.completedAt || 0));
+  return [...unfinished, ...completed];
 }
 function addTask(text, type, priority) {
   const taskText = (text || $('taskInput').value).trim();
@@ -644,12 +674,16 @@ function addTask(text, type, priority) {
   saveLocal();
 }
 function toggleTask(id) {
+  let completedTask = null;
   state.tasks = state.tasks.map(task => {
     if (task.id !== id) return task;
     const done = !task.done;
-    return { ...task, done, completedDate: done ? TODAY : null, completedAt: done ? new Date().toISOString() : null };
+    const next = { ...task, done, completedDate: done ? TODAY : null, completedAt: done ? new Date().toISOString() : null };
+    if (done) completedTask = next;
+    return next;
   });
   saveLocal();
+  if (completedTask) celebrateTask(completedTask);
 }
 function deleteTask(id) {
   state.tasks = state.tasks.filter(task => task.id !== id);
@@ -659,6 +693,42 @@ function postponeTask(id, days = 1) {
   state.tasks = state.tasks.map(task => task.id === id ? { ...task, dueDate: addDaysKey(task.dueDate || TODAY, days) } : task);
   saveLocal();
   toast(`已顺延 ${days} 天`);
+}
+
+
+function playCompletionSound() {
+  const AudioContext = window.AudioContext || window.webkitAudioContext;
+  if (!AudioContext) return;
+  const ctx = new AudioContext();
+  const now = ctx.currentTime;
+  [523.25, 659.25, 783.99].forEach((freq, index) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(0.0001, now + index * 0.08);
+    gain.gain.exponentialRampToValueAtTime(0.12, now + index * 0.08 + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + index * 0.08 + 0.22);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(now + index * 0.08);
+    osc.stop(now + index * 0.08 + 0.24);
+  });
+  setTimeout(() => ctx.close(), 900);
+}
+function celebrateTask(task) {
+  const node = $('celebration');
+  if (!node) return;
+  const pieces = Array.from({ length: 22 }, (_, index) => {
+    const angle = (Math.PI * 2 * index) / 22;
+    const distance = 95 + Math.random() * 95;
+    const color = index % 3 === 0 ? 'var(--mint)' : index % 3 === 1 ? 'var(--green)' : 'var(--theme-bg-2)';
+    return `<i class="confetti" style="left:50%;top:50%;--dx:${Math.cos(angle) * distance}px;--dy:${Math.sin(angle) * distance}px;background:${color};animation-delay:${index * 0.012}s"></i>`;
+  }).join('');
+  node.innerHTML = `<div class="celebration-bubble"><b>完成啦，开开真棒！</b><span>${escapeHtml(task.text).slice(0, 42)}</span>${pieces}</div>`;
+  node.classList.add('show');
+  playCompletionSound();
+  setTimeout(() => node.classList.remove('show'), 1300);
+  setTimeout(() => { node.innerHTML = ''; }, 1700);
 }
 
 function renderCompletedSummary() {
@@ -687,7 +757,7 @@ function renderTasks() {
     list.innerHTML = `<div class="empty-state"><p class="sub">${copy}</p></div>`;
     return;
   }
-  list.innerHTML = tasks.map(task => `
+  const renderTaskItem = task => `
     <div class="task-item ${task.done ? 'done' : ''}">
       <button class="check" onclick="toggleTask('${task.id}')">${task.done ? '✓' : ''}</button>
       <div>
@@ -700,7 +770,19 @@ function renderTasks() {
         <button class="ghost" onclick="deleteTask('${task.id}')">删除</button>
       </div>
     </div>
-  `).join('');
+  `;
+  if (scope === 'allTasks') {
+    const unfinished = tasks.filter(task => !task.done);
+    const completed = tasks.filter(task => task.done);
+    list.innerHTML = `
+      <div class="task-section-title">未完成 · ${unfinished.length} 项</div>
+      ${unfinished.length ? unfinished.map(renderTaskItem).join('') : '<div class="empty-state"><p class="sub">未完成任务已清空，太棒了。</p></div>'}
+      <div class="task-section-title">已完成 · ${completed.length} 项</div>
+      ${completed.length ? completed.map(renderTaskItem).join('') : '<div class="empty-state"><p class="sub">完成任务后会沉到这里。</p></div>'}
+    `;
+    return;
+  }
+  list.innerHTML = tasks.map(renderTaskItem).join('');
 }
 
 function renderFocusTaskOptions() {
@@ -982,6 +1064,70 @@ ${left.length ? left.slice(0, 10).map((task, index) => `${index + 1}. ${task.tex
 3. 周末用 20 分钟回看成长档案。`;
   showView('report');
 }
+
+function buildAiReviewData() {
+  const monthStart = `${TODAY.slice(0, 8)}01`;
+  const recentDaily = Object.keys(state.daily || {}).sort().reverse().slice(0, 14).map(key => ({ date: key, ...state.daily[key] }));
+  const recentTasks = state.tasks.slice(0, 80).map(task => ({ text: task.text, type: task.type, priority: priorityLabel[task.priority] || task.priority, done: task.done, dueDate: task.dueDate, completedDate: task.completedDate, carryCount: task.carryCount || 0 }));
+  return {
+    today: TODAY,
+    projects: state.projects || [],
+    tasks: recentTasks,
+    focusSessions: (state.focusSessions || []).filter(session => session.date >= monthStart).slice(0, 80),
+    daily: recentDaily,
+    stats: {
+      todayLeft: todayTasks().length,
+      todayDone: state.tasks.filter(task => task.completedDate === TODAY).length,
+      monthDone: state.tasks.filter(task => task.completedDate >= monthStart && task.completedDate <= TODAY).length,
+      focusThisMonth: (state.focusSessions || []).filter(session => session.date >= monthStart && session.date <= TODAY).reduce((sum, session) => sum + Number(session.minutes || 0), 0),
+      streak: countStreak()
+    }
+  };
+}
+function saveAiSettingsFromInputs() {
+  settings.aiEndpoint = $('aiEndpointInput').value.trim() || 'https://api.openai.com/v1/chat/completions';
+  settings.aiModel = $('aiModelInput').value.trim() || 'gpt-4.1-mini';
+  settings.aiKey = $('aiKeyInput').value.trim();
+  localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+}
+async function generateAiReview() {
+  saveAiSettingsFromInputs();
+  if (!settings.aiKey) return toast('先填写 AI API Key');
+  const button = $('aiReviewBtn');
+  button.disabled = true;
+  button.textContent = 'AI 复盘中...';
+  const payload = {
+    model: settings.aiModel,
+    messages: [
+      { role: 'system', content: '你是一个温柔但具体的博士成长教练。请基于用户提供的结构化数据，用中文输出简洁、可执行的复盘。' },
+      { role: 'user', content: `请分析这些成长数据，输出：1) 今日/近期模式洞察；2) 最大卡点；3) 明天最优先的3个行动；4) 鼓励但不空泛的一句话。数据：${JSON.stringify(buildAiReviewData())}` }
+    ],
+    temperature: 0.7
+  };
+  try {
+    const res = await fetch(settings.aiEndpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${settings.aiKey}` },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error?.message || `请求失败 ${res.status}`);
+    const text = data.choices?.[0]?.message?.content?.trim() || data.output_text || 'AI 没有返回文本';
+    $('aiReviewText').value = text;
+    $('reviewText').value = `${$('reviewText').value.trim()}
+
+九、AI 数据复盘
+${text}`.trim();
+    toast('AI 复盘已生成');
+  } catch (error) {
+    $('aiReviewText').value = `AI 复盘失败：${error.message}`;
+    toast(`AI 复盘失败：${error.message}`);
+  } finally {
+    button.disabled = false;
+    button.textContent = 'AI 复盘当前数据';
+  }
+}
+
 function renderStats() {
   const todayAll = state.tasks.filter(task => task.dueDate === TODAY || task.completedDate === TODAY);
   const todayDone = state.tasks.filter(task => task.completedDate === TODAY);
@@ -1210,6 +1356,7 @@ function bindEvents() {
   $('loadArchiveDateBtn').addEventListener('click', loadArchiveDate);
   $('archiveDateInput').addEventListener('change', loadArchiveDate);
   $('saveReviewBtn').addEventListener('click', saveReview);
+  $('aiReviewBtn').addEventListener('click', generateAiReview);
   $('weekReportBtn').addEventListener('click', () => generateReport(7));
   $('monthReportBtn').addEventListener('click', () => generateReport(30));
   $('copyReportBtn').addEventListener('click', copyReport);
@@ -1246,6 +1393,9 @@ async function init() {
   $('supabaseUrlInput').value = settings.url || '';
   $('supabaseAnonInput').value = settings.anon || '';
   $('emailInput').value = settings.email || '';
+  $('aiEndpointInput').value = settings.aiEndpoint || 'https://api.openai.com/v1/chat/completions';
+  $('aiModelInput').value = settings.aiModel || 'gpt-4.1-mini';
+  $('aiKeyInput').value = settings.aiKey || '';
   $('themeInput').value = settings.theme || 'auto';
   $('dueDateInput').value = TODAY;
   $('archiveDateInput').value = TODAY;
