@@ -152,11 +152,15 @@
     @keyframes confetti { 0% { transform: translate(0,0) rotate(0deg); opacity: 1; } 100% { transform: translate(var(--dx),var(--dy)) rotate(520deg); opacity: 0; } }
     @media(max-width: 900px) {
       .app, .hero, .view-grid, .row-task, .row-2, .row-3, .settings, .kpis, .toolbar, .mini-grid { grid-template-columns: 1fr; }
-      body { padding-bottom: 88px; }
+      body { padding-bottom: 154px; }
       .side { position: relative; height: auto; padding-bottom: 12px; }
       .side > .nav { position: fixed; left: 10px; right: 10px; bottom: 10px; z-index: 30; grid-template-columns: repeat(5,1fr); gap: 6px; padding: 8px; border: 1px solid var(--line); border-radius: 22px; background: rgba(255,255,255,.92); box-shadow: var(--shadow); backdrop-filter: blur(16px); }
       .side > .nav button { justify-content: center; text-align: center; flex-direction: column; gap: 2px; padding: 8px 4px; border-radius: 15px; font-size: 12px; line-height: 1.2; min-height: 54px; }
       .side > .nav button b { font-size: 11px; }
+      #pushSideBtn, #pullSideBtn, #exportBtn { position: fixed; bottom: 82px; z-index: 31; min-height: 42px; padding: 8px 6px; border-radius: 16px; box-shadow: var(--shadow); background: rgba(255,255,255,.94); }
+      #pushSideBtn { left: 10px; width: calc((100vw - 32px) / 3); }
+      #pullSideBtn { left: calc(16px + (100vw - 32px) / 3); width: calc((100vw - 32px) / 3); }
+      #exportBtn { right: 10px; width: calc((100vw - 32px) / 3); }
       .main { padding: 18px; }
       .hero h2 { font-size: 32px; }
       .task-item { grid-template-columns: auto 1fr; }
@@ -328,14 +332,14 @@
 
     <section id="view-report" class="view card hidden">
       <h2>周报 / 月报 / AI 复盘</h2>
-      <p class="sub">周期复盘和 AI 复盘统一放在这里；单日复盘仍在“复盘归档”中手动生成和保存。</p>
+      <p class="sub">周报、月报和 AI 生成统一放在这里；单日复盘仍在“复盘归档”中手动生成和保存。</p>
       <button id="weekReportBtn" class="primary">生成周报</button>
       <button id="monthReportBtn" class="ghost">生成月报</button>
       <button id="copyReportBtn" class="ghost">复制报告</button>
       <textarea id="reportText" class="report-output" style="margin-top:12px" placeholder="周报/月报会显示在这里"></textarea>
       <div class="ai-panel">
-        <h3>AI 周期复盘</h3>
-        <p class="sub">前端只调用你自己的 Supabase Edge Function，真正的 DeepSeek / OpenAI 兼容接口由后端函数代请求。生成后的 AI 复盘会按今天日期自动归档；同一天再次生成会覆盖更新。</p>
+        <h3>AI 周报月报</h3>
+        <p class="sub">前端只调用你自己的 Supabase Edge Function，真正的 DeepSeek / OpenAI 兼容接口由后端函数代请求。AI 会按你选择的周期生成周报或月报，输出为普通中文段落（不使用 Markdown 符号）；结果会自动归档，同一天同周期再次生成会覆盖更新。</p>
         <div class="notice"><b>部署提示：</b>先运行 `schema.sql`，再部署 `supabase/functions/ai-review`。可先点“测试后端通道”确认函数和账号配置可用。</div>
         <div class="settings">
           <label class="field"><span>后端函数名</span><input id="aiFunctionInput" placeholder="ai-review" /></label>
@@ -345,13 +349,14 @@
           <label class="field"><span>API Key</span><input id="aiKeyInput" type="password" placeholder="保存到当前 Supabase 账号" /></label>
           <label class="field"><span>配置状态</span><input id="aiStatusInput" readonly placeholder="未读取" /></label>
         </div>
+        <label class="field" style="margin-top:10px"><span>AI 生成类型</span><select id="aiPeriodInput"><option value="7">AI 生成周报</option><option value="30">AI 生成月报</option></select></label>
         <div class="quick">
           <button id="saveAiSettingsBtn" class="primary">保存到账号</button>
           <button id="loadAiSettingsBtn" class="ghost">读取账号配置</button>
           <button id="testAiBackendBtn" class="ghost">测试后端通道</button>
-          <button id="aiReviewBtn" class="primary">生成并归档 AI 复盘</button>
+          <button id="aiReviewBtn" class="primary">AI 生成并归档</button>
         </div>
-        <textarea id="aiReviewText" class="ai-review-output" style="margin-top:12px" placeholder="AI 周期复盘结果会显示在这里，并自动归档到下方。"></textarea>
+        <textarea id="aiReviewText" class="ai-review-output" style="margin-top:12px" placeholder="AI 生成的周报/月报会显示在这里，并自动归档到下方。"></textarea>
         <h3>AI 复盘档案</h3>
         <div id="aiArchiveList" class="ai-archive-list"></div>
       </div>
@@ -1046,12 +1051,16 @@ function loadArchiveDate() {
   const dateKey = selectedArchiveDate();
   loadArchive(dateKey);
 }
-function aiReviewKey() { return `${TODAY}-period`; }
-function saveAiReviewArchive(text) {
+function aiReviewPeriodDays() { return Number($('aiPeriodInput')?.value || 7); }
+function aiReviewPeriodLabel(days = aiReviewPeriodDays()) { return days === 30 ? '月报' : '周报'; }
+function aiReviewKey(days = aiReviewPeriodDays()) { return `${TODAY}-${days === 30 ? 'month' : 'week'}`; }
+function saveAiReviewArchive(text, days = aiReviewPeriodDays()) {
   if (!state.aiReviews) state.aiReviews = {};
-  state.aiReviews[aiReviewKey()] = {
+  const label = aiReviewPeriodLabel(days);
+  state.aiReviews[aiReviewKey(days)] = {
     date: TODAY,
-    title: `${TODAY} AI 周期复盘`,
+    periodDays: days,
+    title: `${TODAY} AI ${label}`,
     text,
     savedAt: new Date().toISOString()
   };
@@ -1066,7 +1075,7 @@ function renderAiArchive() {
       <div><b>${escapeHtml(item.title || key)}</b><div class="meta">更新：${formatTime(item.savedAt)}</div></div>
       <button class="ghost" onclick="loadAiReviewArchive('${key}')">查看</button>
     </div>
-  `).join('') : '<p class="sub">还没有 AI 复盘档案。生成 AI 周期复盘后会自动保存；同一天重复生成会覆盖更新。</p>';
+  `).join('') : '<p class="sub">还没有 AI 复盘档案。AI 生成周报/月报后会自动保存；同一天同周期重复生成会覆盖更新。</p>';
 }
 function loadAiReviewArchive(key) {
   const item = state.aiReviews?.[key];
@@ -1114,12 +1123,18 @@ ${left.length ? left.slice(0, 10).map((task, index) => `${index + 1}. ${task.tex
   showView('report');
 }
 
-function buildAiReviewData() {
+function buildAiReviewData(days = aiReviewPeriodDays()) {
+  const end = new Date();
+  const start = new Date();
+  start.setDate(end.getDate() - days + 1);
+  const startKey = toDateKey(start);
+  const periodLabel = aiReviewPeriodLabel(days);
   const monthStart = `${TODAY.slice(0, 8)}01`;
   const recentDaily = Object.keys(state.daily || {}).sort().reverse().slice(0, 14).map(key => ({ date: key, ...state.daily[key] }));
   const recentTasks = state.tasks.slice(0, 80).map(task => ({ text: task.text, type: task.type, priority: priorityLabel[task.priority] || task.priority, done: task.done, dueDate: task.dueDate, completedDate: task.completedDate, carryCount: task.carryCount || 0 }));
   return {
     today: TODAY,
+    period: { type: periodLabel, days, startDate: startKey, endDate: TODAY, outputStyle: 'plain_text_no_markdown' },
     projects: state.projects || [],
     tasks: recentTasks,
     focusSessions: (state.focusSessions || []).filter(session => session.date >= monthStart).slice(0, 80),
@@ -1127,6 +1142,8 @@ function buildAiReviewData() {
     stats: {
       todayLeft: todayTasks().length,
       todayDone: state.tasks.filter(task => task.completedDate === TODAY).length,
+      periodDone: state.tasks.filter(task => task.completedDate && task.completedDate >= startKey && task.completedDate <= TODAY).length,
+      periodFocusMinutes: (state.focusSessions || []).filter(session => session.date >= startKey && session.date <= TODAY).reduce((sum, session) => sum + Number(session.minutes || 0), 0),
       monthDone: state.tasks.filter(task => task.completedDate >= monthStart && task.completedDate <= TODAY).length,
       focusThisMonth: (state.focusSessions || []).filter(session => session.date >= monthStart && session.date <= TODAY).reduce((sum, session) => sum + Number(session.minutes || 0), 0),
       streak: countStreak()
@@ -1195,10 +1212,10 @@ async function loadAiSettings(options = {}) {
   if (!options.silent) toast('已读取账号 AI 配置');
   return true;
 }
-async function callAiBackend(mode) {
+async function callAiBackend(mode, days = aiReviewPeriodDays()) {
   if (!await ensureAiAccountReady()) return null;
   rememberAiForm();
-  const { data, error } = await supabaseClient.functions.invoke(aiFunctionName(), { body: { mode, reviewData: mode === 'review' ? buildAiReviewData() : undefined } });
+  const { data, error } = await supabaseClient.functions.invoke(aiFunctionName(), { body: { mode, periodDays: days, periodLabel: aiReviewPeriodLabel(days), reviewData: mode === 'review' ? buildAiReviewData(days) : undefined } });
   if (error) throw new Error(error.message || '后端函数调用失败');
   if (data?.error) throw new Error(data.error);
   return data;
@@ -1218,20 +1235,22 @@ async function generateAiReview() {
   const button = $('aiReviewBtn');
   try {
     button.disabled = true;
-    button.textContent = 'AI 复盘中...';
-    const data = await callAiBackend('review');
+    const days = aiReviewPeriodDays();
+    const label = aiReviewPeriodLabel(days);
+    button.textContent = `AI 生成${label}中...`;
+    const data = await callAiBackend('review', days);
     const text = data?.text || 'AI 没有返回文本';
     $('aiReviewText').value = text;
-    $('aiStatusInput').value = `复盘完成并已归档 · ${formatTime(new Date().toISOString())}`;
-    saveAiReviewArchive(text);
-    toast('AI 复盘已生成并归档');
+    $('aiStatusInput').value = `${label}已生成并归档 · ${formatTime(new Date().toISOString())}`;
+    saveAiReviewArchive(text, days);
+    toast(`AI ${label}已生成并归档`);
   } catch (error) {
     $('aiReviewText').value = `AI 复盘失败：${error.message}`;
     $('aiStatusInput').value = `复盘失败：${error.message}`;
     toast(`AI 复盘失败：${error.message}`);
   } finally {
     button.disabled = false;
-    button.textContent = '生成并归档 AI 复盘';
+    button.textContent = 'AI 生成并归档';
   }
 }
 
@@ -1303,7 +1322,7 @@ function exportAll() {
     '## 成长档案',
     ...Object.keys(state.archive || {}).sort().map(key => `### ${key}\n${state.archive[key].text || ''}`),
     '',
-    '## AI 周期复盘档案',
+    '## AI 周报月报档案',
     ...Object.keys(state.aiReviews || {}).sort().map(key => `### ${state.aiReviews[key].title || key}\n${state.aiReviews[key].text || ''}`)
   ];
   const blob = new Blob([lines.join('\n')], { type: 'text/markdown;charset=utf-8' });
@@ -1510,6 +1529,7 @@ async function init() {
   $('supabaseAnonInput').value = settings.anon || '';
   $('emailInput').value = settings.email || '';
   fillAiForm({ status: '等待登录后读取账号配置' });
+  $('aiPeriodInput').value = '7';
   $('themeInput').value = settings.theme || 'auto';
   $('dueDateInput').value = TODAY;
   $('archiveDateInput').value = TODAY;
