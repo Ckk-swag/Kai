@@ -251,6 +251,25 @@
           </div>
           <div id="focusLogList" class="focus-log"></div>
         </div>
+        <div class="card timer" style="margin-top:18px">
+          <h2>专注计时</h2>
+          <label class="field" style="text-align:left"><span>本轮专注事项</span><select id="focusTaskSelect"></select></label>
+          <input id="focusTopicInput" style="margin-top:8px" placeholder="或手动填写专注内容" />
+          <div id="timerDisplay" class="timer-display">25:00</div>
+          <p id="timerHint" class="sub">选择一个任务，开始一轮不被打扰的推进；完成后会自动记录日期、事项和分钟数。</p>
+          <div class="quick" style="justify-content:center">
+            <button id="startTimerBtn" class="primary">开始</button>
+            <button id="pauseTimerBtn" class="ghost">暂停</button>
+            <button id="resetTimerBtn" class="ghost">重置</button>
+            <button id="logFocusBtn" class="ghost">记录本轮</button>
+          </div>
+          <div class="timer-presets">
+            <button data-minutes="15" class="ghost">15m</button>
+            <button data-minutes="25" class="ghost">25m</button>
+            <button data-minutes="50" class="ghost">50m</button>
+          </div>
+          <div id="focusLogList" class="focus-log"></div>
+        </div>
         <div class="card" style="margin-top:18px"><h2>今日建议</h2><p id="adviceText" class="sub">先选一个 15 分钟能启动的任务。</p></div>
       </aside>
     </section>
