@@ -57,7 +57,7 @@
     .brand h1 { margin: 0; font-size: 20px; line-height: 1.25; }
     .brand p { margin: 5px 0 0; color: var(--sub); font-size: 13px; }
     .card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); padding: 18px; }
-    .today-card { background: linear-gradient(135deg,#fff,#e8fff8); }
+    .today-card { background: linear-gradient(135deg,#fff,var(--soft-card,#e8fff8)); }
     .status { display: inline-flex; border-radius: 999px; padding: 6px 10px; font-size: 12px; font-weight: 900; background: var(--yellow); color: #7a6510; }
     .status.ok { background: #dffbf4; color: #064e3b; }
     .status.warn { background: var(--danger-bg); color: var(--danger); }
@@ -111,6 +111,11 @@
     .task-title { font-weight: 900; line-height: 1.4; }
     .meta { color: var(--sub); font-size: 13px; margin-top: 6px; line-height: 1.65; }
     .sub { color: var(--sub); line-height: 1.7; }
+    .quote { margin: 8px 0 12px; color: var(--sub); line-height: 1.7; }
+    .note-tabs { display: grid; gap: 10px; margin-top: 10px; }
+    .note-tabs textarea { min-height: 92px; }
+    .chart-card { margin-top: 12px; background: #fff; border: 1px solid var(--line); border-radius: 18px; padding: 12px; }
+    .chart-card svg { width: 100%; height: 150px; display: block; }
     .hidden { display: none !important; }
     .settings { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
     .notice { background: var(--yellow); color: #5f4b00; border: 1px solid #f9e58c; border-radius: 18px; padding: 14px; line-height: 1.7; margin: 12px 0; }
@@ -143,7 +148,7 @@
     </div>
     <div class="card today-card">
       <b id="dateText"></b>
-      <p class="sub" style="margin:8px 0 12px">博士成长不是冲刺，是每天可追踪的一点点推进。</p>
+      <p id="quoteText" class="quote">博士成长不是冲刺，是每天可追踪的一点点推进。</p>
       <span id="syncStatus" class="status">本地模式</span>
     </div>
     <div class="nav">
@@ -151,7 +156,7 @@
       <button data-view="thesis">项目进度 <b id="countProject">0</b></button>
       <button data-view="review">复盘归档 <b id="countDone">0</b></button>
       <button data-view="report">周报月报 <b>2</b></button>
-      <button data-view="cloud">云同步 <b>3.7</b></button>
+      <button data-view="cloud">云同步 <b>3.8</b></button>
     </div>
     <button id="pushSideBtn" class="ghost">推送云端</button>
     <button id="pullSideBtn" class="ghost">拉取云端</button>
@@ -216,11 +221,35 @@
           <h2>今日打卡</h2>
           <input id="focusInput" placeholder="今日主线" />
           <div class="row-2" style="margin:10px 0">
-            <select id="energyInput"><option>高</option><option selected>中</option><option>低</option></select>
-            <select id="moodInput"><option selected>稳定</option><option>焦虑</option><option>疲惫</option><option>兴奋</option></select>
+            <label class="field"><span>今日精力</span><select id="energyInput"><option value="0">0%</option><option value="25">25%</option><option value="50" selected>50%</option><option value="75">75%</option><option value="100">100%</option></select></label>
+            <label class="field"><span>今日状态</span><select id="moodInput"><option selected>稳定</option><option>焦虑</option><option>疲惫</option><option>兴奋</option></select></label>
           </div>
-          <textarea id="noteInput" placeholder="卡点、灵感、导师建议"></textarea>
+          <div class="note-tabs">
+            <textarea id="researchNoteInput" placeholder="科研想法：卡点、灵感、导师建议、实验/论文/项目记录"></textarea>
+            <textarea id="fitnessNoteInput" placeholder="健身想法：运动、睡眠、饮食、身体状态"></textarea>
+            <textarea id="growthNoteInput" placeholder="成长想法：情绪、人际、习惯、复盘、长期提醒"></textarea>
+          </div>
           <button id="saveDailyBtn" class="primary" style="width:100%;margin-top:10px">保存打卡</button>
+          <div class="chart-card"><b>本月精力量化折线图</b><div id="energyChart"></div></div>
+        </div>
+        <div class="card timer" style="margin-top:18px">
+          <h2>专注计时</h2>
+          <label class="field" style="text-align:left"><span>本轮专注事项</span><select id="focusTaskSelect"></select></label>
+          <input id="focusTopicInput" style="margin-top:8px" placeholder="或手动填写专注内容" />
+          <div id="timerDisplay" class="timer-display">25:00</div>
+          <p id="timerHint" class="sub">选择一个任务，开始一轮不被打扰的推进；完成后会自动记录日期、事项和分钟数。</p>
+          <div class="quick" style="justify-content:center">
+            <button id="startTimerBtn" class="primary">开始</button>
+            <button id="pauseTimerBtn" class="ghost">暂停</button>
+            <button id="resetTimerBtn" class="ghost">重置</button>
+            <button id="logFocusBtn" class="ghost">记录本轮</button>
+          </div>
+          <div class="timer-presets">
+            <button data-minutes="15" class="ghost">15m</button>
+            <button data-minutes="25" class="ghost">25m</button>
+            <button data-minutes="50" class="ghost">50m</button>
+          </div>
+          <div id="focusLogList" class="focus-log"></div>
         </div>
         <div class="card timer" style="margin-top:18px">
           <h2>专注计时</h2>
@@ -343,6 +372,92 @@ function toDateKey(date) {
 }
 function parseDateKey(key) { return new Date(`${key}T00:00:00`); }
 function daysBetween(a, b) { return Math.max(0, Math.floor((parseDateKey(b) - parseDateKey(a)) / 86400000)); }
+
+const QUOTES = [
+  '博士成长不是冲刺，是每天可追踪的一点点推进。',
+  '今天不用解决全部问题，只要把最重要的问题往前推一点。',
+  '先做一个 15 分钟动作，让行动替你消化焦虑。',
+  '稳定记录比偶尔爆发更可靠，数据会替你看见成长。',
+  '把卡点写下来，明天的大脑会更容易接上。',
+  '真正的长期主义，是允许今天小步但不断线。',
+  '把复杂任务拆小，小到你愿意立刻开始。',
+  '科研不是证明自己聪明，而是训练自己持续澄清问题。',
+  '休息和运动也是生产力的一部分，身体会参与思考。',
+  '今天的复盘，是明天少走弯路的地图。',
+  '不求每小时完美，只求下一小时更清楚。',
+  '能量低时也可以推进：整理、标注、列问题都算数。'
+];
+const PASTEL_THEMES = [
+  { bg1: '#fff7ed', bg2: '#fed7aa', soft: '#fff1e6', mint: '#fdba74', green: '#ea580c', line: '#fed7aa' },
+  { bg1: '#fdf2f8', bg2: '#fbcfe8', soft: '#fce7f3', mint: '#f9a8d4', green: '#db2777', line: '#fbcfe8' },
+  { bg1: '#f5f3ff', bg2: '#ddd6fe', soft: '#ede9fe', mint: '#c4b5fd', green: '#7c3aed', line: '#ddd6fe' },
+  { bg1: '#eff6ff', bg2: '#bfdbfe', soft: '#dbeafe', mint: '#93c5fd', green: '#2563eb', line: '#bfdbfe' },
+  { bg1: '#ecfeff', bg2: '#a5f3fc', soft: '#cffafe', mint: '#67e8f9', green: '#0891b2', line: '#a5f3fc' },
+  { bg1: '#f0fdf4', bg2: '#bbf7d0', soft: '#dcfce7', mint: '#86efac', green: '#16a34a', line: '#bbf7d0' },
+  { bg1: '#fffbeb', bg2: '#fde68a', soft: '#fef3c7', mint: '#fcd34d', green: '#d97706', line: '#fde68a' }
+];
+function currentQuote() {
+  const hourSeed = Math.floor(Date.now() / 3600000);
+  return QUOTES[hourSeed % QUOTES.length];
+}
+function renderQuote() {
+  const node = $('quoteText');
+  if (node) node.textContent = currentQuote();
+}
+function applyDailyTheme() {
+  const theme = PASTEL_THEMES[daysBetween('2026-01-01', TODAY) % PASTEL_THEMES.length];
+  const root = document.documentElement;
+  root.style.setProperty('--line', theme.line);
+  root.style.setProperty('--mint', theme.mint);
+  root.style.setProperty('--green', theme.green);
+  root.style.setProperty('--soft-card', theme.soft);
+  document.body.style.background = `radial-gradient(circle at top left, ${theme.bg2} 0, ${theme.bg1} 34%, transparent 60%), radial-gradient(circle at bottom right, ${theme.soft} 0, ${theme.bg1} 30%, transparent 58%), linear-gradient(135deg, ${theme.bg1}, #ffffff)`;
+}
+function normalizeEnergy(value) {
+  const map = { '低': 25, '中': 50, '高': 75, '稳定': 50 };
+  const num = Number(map[value] ?? value ?? 50);
+  if ([0, 25, 50, 75, 100].includes(num)) return String(num);
+  return String(Math.max(0, Math.min(100, Math.round(num / 25) * 25)));
+}
+function dailyNoteText(daily) {
+  if (!daily) return '暂无记录';
+  const research = daily.researchNote || daily.note || '';
+  const fitness = daily.fitnessNote || '';
+  const growth = daily.growthNote || '';
+  return `科研：${research || '暂无'}\n健身：${fitness || '暂无'}\n成长：${growth || '暂无'}`;
+}
+function renderEnergyChart() {
+  const node = $('energyChart');
+  if (!node) return;
+  const monthStart = `${TODAY.slice(0, 8)}01`;
+  const days = daysBetween(monthStart, TODAY) + 1;
+  const width = 320;
+  const height = 130;
+  const pad = 18;
+  const points = [];
+  for (let i = 0; i < days; i += 1) {
+    const key = addDaysKey(monthStart, i);
+    const daily = state.daily?.[key];
+    if (!daily || (!daily.checked && daily.energy === undefined)) continue;
+    const value = Number(normalizeEnergy(daily.energy));
+    const x = days === 1 ? width / 2 : pad + i * ((width - pad * 2) / (days - 1));
+    const y = height - pad - value / 100 * (height - pad * 2);
+    points.push({ x, y, value, key });
+  }
+  if (!points.length) {
+    node.innerHTML = '<p class="sub">保存打卡后，这里会生成本月精力量化折线图。</p>';
+    return;
+  }
+  const avg = Math.round(points.reduce((sum, point) => sum + point.value, 0) / points.length);
+  node.innerHTML = `<svg viewBox="0 0 ${width} ${height}" role="img" aria-label="本月精力量化折线图">
+    <line x1="${pad}" y1="${height - pad}" x2="${width - pad}" y2="${height - pad}" stroke="#d1d5db" />
+    <line x1="${pad}" y1="${pad}" x2="${pad}" y2="${height - pad}" stroke="#d1d5db" />
+    <polyline fill="none" stroke="var(--green)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" points="${points.map(point => `${point.x},${point.y}`).join(' ')}" />
+    ${points.map(point => `<circle cx="${point.x}" cy="${point.y}" r="4" fill="var(--green)"><title>${point.key}：${point.value}%</title></circle>`).join('')}
+    <text x="${pad}" y="14" fill="#4b5563" font-size="12">本月平均精力 ${avg}%</text>
+  </svg>`;
+}
+
 function loadState() {
   try { return Object.assign({ tasks: [], daily: {}, archive: {}, thesis: {}, projects: [], focusSessions: [] }, JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}')); }
   catch { return { tasks: [], daily: {}, archive: {}, thesis: {}, projects: [], focusSessions: [] }; }
@@ -375,7 +490,7 @@ function getWeekEndKey() { return addDaysKey(TODAY, 6); }
 function countStreak() {
   let streak = 0;
   let cursor = TODAY;
-  while (state.daily?.[cursor] && (state.daily[cursor].focus || state.daily[cursor].note || state.daily[cursor].checked)) {
+  while (state.daily?.[cursor] && (state.daily[cursor].focus || state.daily[cursor].note || state.daily[cursor].researchNote || state.daily[cursor].fitnessNote || state.daily[cursor].growthNote || state.daily[cursor].checked)) {
     streak += 1;
     cursor = addDaysKey(cursor, -1);
   }
@@ -410,7 +525,7 @@ async function autoPushCloud() {
 }
 function ensureToday() {
   if (!state.daily) state.daily = {};
-  if (!state.daily[TODAY]) state.daily[TODAY] = { focus: '', energy: '中', mood: '稳定', note: '', checked: false };
+  if (!state.daily[TODAY]) state.daily[TODAY] = { focus: '', energy: '50', mood: '稳定', researchNote: '', fitnessNote: '', growthNote: '', checked: false };
   if (!state.thesis) state.thesis = { title: '', stage: '选题构思', progress: 0, done: '', next: '', blockers: '', updatedAt: '' };
   if (!Array.isArray(state.projects)) state.projects = [];
   if (!Array.isArray(state.focusSessions)) state.focusSessions = [];
@@ -639,17 +754,28 @@ function renderFocusLog() {
 }
 
 function saveDaily() {
-  state.daily[TODAY] = { focus: $('focusInput').value, energy: $('energyInput').value, mood: $('moodInput').value, note: $('noteInput').value, checked: true };
+  state.daily[TODAY] = {
+    focus: $('focusInput').value,
+    energy: normalizeEnergy($('energyInput').value),
+    mood: $('moodInput').value,
+    researchNote: $('researchNoteInput').value,
+    fitnessNote: $('fitnessNoteInput').value,
+    growthNote: $('growthNoteInput').value,
+    checked: true
+  };
   saveLocal();
-  toast('打卡已保存');
+  toast('打卡已保存，精力折线图已更新');
 }
 function fillDaily() {
   ensureToday();
   const daily = state.daily[TODAY];
   $('focusInput').value = daily.focus || '';
-  $('energyInput').value = daily.energy || '中';
+  $('energyInput').value = normalizeEnergy(daily.energy);
   $('moodInput').value = daily.mood || '稳定';
-  $('noteInput').value = daily.note || '';
+  $('researchNoteInput').value = daily.researchNote || daily.note || '';
+  $('fitnessNoteInput').value = daily.fitnessNote || '';
+  $('growthNoteInput').value = daily.growthNote || '';
+  renderEnergyChart();
 }
 function resetProjectForm() {
   $('editingProjectId').value = '';
@@ -746,7 +872,7 @@ function buildAdvice() {
 }
 function generateReview(dateKey = selectedArchiveDate()) {
   ensureToday();
-  if (!state.daily[dateKey]) state.daily[dateKey] = { focus: '', energy: '中', mood: '稳定', note: '', checked: false };
+  if (!state.daily[dateKey]) state.daily[dateKey] = { focus: '', energy: '50', mood: '稳定', researchNote: '', fitnessNote: '', growthNote: '', checked: false };
   const daily = state.daily[dateKey];
   const projectsText = projectSummary();
   const done = state.tasks.filter(task => task.completedDate === dateKey);
@@ -761,7 +887,7 @@ ${daily.focus || '未填写'}
 ${projectsText}
 
 三、当日状态
-精力：${daily.energy || '中'}
+精力：${normalizeEnergy(daily.energy)}%
 状态：${daily.mood || '稳定'}
 
 四、当日完成
@@ -775,7 +901,7 @@ ${summarizeFocus(dateKey)}
 ${left.length ? left.map((task, index) => `${index + 1}. ${task.text}（${priorityLabel[task.priority] || task.priority}，计划：${task.dueDate || dateKey}，已叠加 ${task.carryCount || 0} 天）`).join('\n') : '当日主线已基本清空'}
 
 七、记录与卡点
-${daily.note || '暂无记录'}
+${dailyNoteText(daily)}
 
 八、明日建议
 ${buildAdvice()}`;
@@ -879,6 +1005,8 @@ function render() {
   renderFocusLog();
   renderArchive();
   renderProjects();
+  renderEnergyChart();
+  renderQuote();
   renderSyncStatus();
 }
 function showView(view) {
@@ -1110,6 +1238,9 @@ async function init() {
   $('emailInput').value = settings.email || '';
   $('dueDateInput').value = TODAY;
   $('archiveDateInput').value = TODAY;
+  applyDailyTheme();
+  renderQuote();
+  setInterval(renderQuote, 3600000);
   renderTimer();
   let loadedRemote = false;
   if (settings.url && settings.anon && window.supabase) {
