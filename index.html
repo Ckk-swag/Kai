@@ -66,6 +66,8 @@
     .status.ok { background: var(--soft-card); color: var(--theme-contrast); border: 1px solid var(--line); }
     .status.warn { background: var(--danger-bg); color: var(--danger); }
     .nav { display: grid; gap: 8px; }
+    .side-actions { display: grid; gap: 14px; }
+    .mobile-actions { display: none; }
     .nav button { background: #fff; border: 1px solid var(--line); color: #1f2937; text-align: left; display: flex; justify-content: space-between; align-items: center; }
     .nav button.on { background: linear-gradient(135deg,var(--soft-card),rgba(255,255,255,.95)); color: var(--theme-contrast); border-color: var(--mint); }
     .primary { background: linear-gradient(135deg,var(--mint),var(--soft-card)); color: var(--theme-contrast); }
@@ -152,15 +154,14 @@
     @keyframes confetti { 0% { transform: translate(0,0) rotate(0deg); opacity: 1; } 100% { transform: translate(var(--dx),var(--dy)) rotate(520deg); opacity: 0; } }
     @media(max-width: 900px) {
       .app, .hero, .view-grid, .row-task, .row-2, .row-3, .settings, .kpis, .toolbar, .mini-grid { grid-template-columns: 1fr; }
-      body { padding-bottom: 154px; }
+      body { padding-bottom: 88px; }
       .side { position: relative; height: auto; padding-bottom: 12px; }
       .side > .nav { position: fixed; left: 10px; right: 10px; bottom: 10px; z-index: 30; grid-template-columns: repeat(5,1fr); gap: 6px; padding: 8px; border: 1px solid var(--line); border-radius: 22px; background: rgba(255,255,255,.92); box-shadow: var(--shadow); backdrop-filter: blur(16px); }
       .side > .nav button { justify-content: center; text-align: center; flex-direction: column; gap: 2px; padding: 8px 4px; border-radius: 15px; font-size: 12px; line-height: 1.2; min-height: 54px; }
       .side > .nav button b { font-size: 11px; }
-      #pushSideBtn, #pullSideBtn, #exportBtn { position: fixed; bottom: 82px; z-index: 31; min-height: 42px; padding: 8px 6px; border-radius: 16px; box-shadow: var(--shadow); background: rgba(255,255,255,.94); }
-      #pushSideBtn { left: 10px; width: calc((100vw - 32px) / 3); }
-      #pullSideBtn { left: calc(16px + (100vw - 32px) / 3); width: calc((100vw - 32px) / 3); }
-      #exportBtn { right: 10px; width: calc((100vw - 32px) / 3); }
+      .side-actions { display: none; }
+      .mobile-actions { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin: 18px; padding: 12px; border: 1px solid var(--line); border-radius: 22px; background: rgba(255,255,255,.72); box-shadow: var(--shadow); }
+      .mobile-actions button { padding: 10px 8px; border-radius: 14px; }
       .main { padding: 18px; }
       .hero h2 { font-size: 32px; }
       .task-item { grid-template-columns: auto 1fr; }
@@ -187,12 +188,14 @@
       <button data-view="thesis">项目进度 <b id="countProject">0</b></button>
       <button data-view="review">复盘归档 <b id="countDone">0</b></button>
       <button data-view="report">周报AI <b>3</b></button>
-      <button data-view="cloud">云同步 <b>4.0</b></button>
+      <button data-view="cloud">云同步 <b>4.1</b></button>
     </div>
-    <button id="pushSideBtn" class="ghost">推送云端</button>
-    <button id="pullSideBtn" class="ghost">拉取云端</button>
-    <button id="exportBtn" class="ghost">导出全部</button>
-    <button id="clearBtn" class="danger">清空本地</button>
+    <div class="side-actions">
+      <button id="pushSideBtn" class="ghost">推送云端</button>
+      <button id="pullSideBtn" class="ghost">拉取云端</button>
+      <button id="exportBtn" class="ghost">导出全部</button>
+      <button id="clearBtn" class="danger">清空本地</button>
+    </div>
   </aside>
 
   <main class="main">
@@ -381,6 +384,11 @@
       </div>
     </section>
   </main>
+  <div class="mobile-actions">
+    <button id="pushMobileBtn" class="ghost">推送云端</button>
+    <button id="pullMobileBtn" class="ghost">拉取云端</button>
+    <button id="exportMobileBtn" class="ghost">导出全部</button>
+  </div>
 </div>
 <div id="toast" class="toast"></div>
 <div id="celebration" class="celebration"></div>
@@ -1036,10 +1044,21 @@ function renderArchive() {
   $('archiveList').innerHTML = keys.length ? keys.map(key => `
     <div class="task-item">
       <div><b>${key}</b><div class="meta">完成 ${state.archive[key].done || 0} 项 · 专注 ${state.archive[key].focusMinutes || focusMinutesByDate(key)} 分钟 · 保存：${formatTime(state.archive[key].savedAt)}</div></div>
-      <button class="ghost" onclick="loadArchive('${key}')">查看</button>
+      <div class="task-actions">
+        <button class="ghost" onclick="loadArchive('${key}')">查看</button>
+        <button class="danger" onclick="deleteArchive('${key}')">删除</button>
+      </div>
     </div>
   `).join('') : '<p class="sub">还没有归档。选择日期后生成并保存，就能按日期读取复盘。</p>';
   $('countDone').textContent = state.tasks.filter(task => task.completedDate === TODAY).length;
+}
+function deleteArchive(key) {
+  if (!confirm(`确认删除 ${key} 的复盘归档？删除后无法恢复。`)) return;
+  if (!state.archive?.[key]) return;
+  delete state.archive[key];
+  if ($('archiveDateInput').value === key) $('reviewText').value = '';
+  saveLocal();
+  toast(`已删除 ${key} 复盘归档`);
 }
 function loadArchive(key) {
   $('archiveDateInput').value = key;
@@ -1073,7 +1092,10 @@ function renderAiArchive() {
   node.innerHTML = entries.length ? entries.map(([key, item]) => `
     <div class="task-item">
       <div><b>${escapeHtml(item.title || key)}</b><div class="meta">更新：${formatTime(item.savedAt)}</div></div>
-      <button class="ghost" onclick="loadAiReviewArchive('${key}')">查看</button>
+      <div class="task-actions">
+        <button class="ghost" onclick="loadAiReviewArchive('${key}')">查看</button>
+        <button class="danger" onclick="deleteAiReviewArchive('${key}')">删除</button>
+      </div>
     </div>
   `).join('') : '<p class="sub">还没有 AI 复盘档案。AI 生成周报/月报后会自动保存；同一天同周期重复生成会覆盖更新。</p>';
 }
@@ -1083,6 +1105,16 @@ function loadAiReviewArchive(key) {
   $('aiReviewText').value = item.text || '';
   $('aiStatusInput').value = `已读取归档 · ${formatTime(item.savedAt)}`;
   showView('report');
+}
+function deleteAiReviewArchive(key) {
+  const item = state.aiReviews?.[key];
+  if (!item) return;
+  if (!confirm(`确认删除「${item.title || key}」？删除后无法恢复。`)) return;
+  delete state.aiReviews[key];
+  $('aiReviewText').value = '';
+  $('aiStatusInput').value = '已删除 AI 复盘归档';
+  saveLocal();
+  toast('AI 复盘归档已删除');
 }
 function generateReport(days) {
   const end = new Date();
@@ -1516,6 +1548,9 @@ function bindEvents() {
   $('pullCloudBtn').addEventListener('click', pullCloud);
   $('pushSideBtn').addEventListener('click', pushCloud);
   $('pullSideBtn').addEventListener('click', pullCloud);
+  $('pushMobileBtn').addEventListener('click', pushCloud);
+  $('pullMobileBtn').addEventListener('click', pullCloud);
+  $('exportMobileBtn').addEventListener('click', exportAll);
   $('startTimerBtn').addEventListener('click', startTimer);
   $('pauseTimerBtn').addEventListener('click', pauseTimer);
   $('resetTimerBtn').addEventListener('click', resetTimer);

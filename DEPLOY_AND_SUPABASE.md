@@ -12,7 +12,7 @@
 
 打开网页云同步页，填入以上两项，注册/登录即可。
 
-## 4.0 AI 复盘后端函数
+## 4.1 AI 复盘后端函数
 1. 先在 Supabase SQL Editor 重新运行仓库根目录的 `schema.sql`，创建 `research_growth_ai_settings`。
 2. 部署 Edge Function：`supabase functions deploy ai-review`。
 3. 前端“周报AI”页只会调用 Supabase Function `ai-review`，不会直接请求 DeepSeek / OpenAI 兼容接口。
