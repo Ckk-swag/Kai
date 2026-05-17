@@ -44,7 +44,7 @@
       color: var(--text);
       outline: none;
     }
-    input:focus, select:focus, textarea:focus { border-color: #6edac6; box-shadow: 0 0 0 4px rgba(184,242,230,.45); }
+    input:focus, select:focus, textarea:focus { border-color: var(--mint); box-shadow: 0 0 0 4px color-mix(in srgb, var(--mint) 35%, transparent); }
     textarea { min-height: 160px; line-height: 1.7; resize: vertical; }
     .app { display: grid; grid-template-columns: 305px 1fr; min-height: 100vh; }
     .side {
@@ -63,27 +63,28 @@
     .status.warn { background: var(--danger-bg); color: var(--danger); }
     .nav { display: grid; gap: 8px; }
     .nav button { background: #fff; border: 1px solid var(--line); color: #1f2937; text-align: left; display: flex; justify-content: space-between; align-items: center; }
-    .nav button.on { background: linear-gradient(135deg,#dffbf4,#c8fff2); color: #064e3b; border-color: #7ee7d4; }
-    .primary { background: linear-gradient(135deg,#6edac6,#a7f3d0); color: #102a2a; }
-    .ghost { background: #f1fffb; color: #0f766e; border: 1px solid var(--line); }
+    .nav button.on { background: linear-gradient(135deg,var(--soft-card,#dffbf4),rgba(255,255,255,.95)); color: var(--green); border-color: var(--mint); }
+    .primary { background: linear-gradient(135deg,var(--mint),var(--soft-card,#a7f3d0)); color: var(--text); }
+    .ghost { background: rgba(255,255,255,.78); color: var(--green); border: 1px solid var(--line); }
     .danger { background: var(--danger-bg); color: var(--danger); }
     .main { width: 100%; max-width: 1180px; margin: 0 auto; padding: 28px; }
     .hero { display: grid; grid-template-columns: 1fr 250px 250px; gap: 18px; margin-bottom: 18px; }
     .eyebrow { margin: 0 0 8px; color: #0f9f89; font-weight: 900; letter-spacing: .08em; }
     .hero h2 { font-size: 40px; line-height: 1.12; margin: 0; }
-    .hero h2 span { background: linear-gradient(135deg,#10a88f,#5ecbb8); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .hero h2 span { background: linear-gradient(135deg,var(--green),var(--mint)); -webkit-background-clip: text; background-clip: text; color: transparent; }
     .growth { background: linear-gradient(135deg,#8debd8,#b8f2e6 60%,#d9fff5); }
     .growth strong { display: block; font-size: 34px; }
     .bar { height: 12px; background: rgba(255,255,255,.75); border-radius: 999px; overflow: hidden; margin: 14px 0; }
-    .bar i { display: block; height: 100%; width: 0%; background: linear-gradient(90deg,#16a085,#c8fff2); }
+    .bar i { display: block; height: 100%; width: 0%; background: linear-gradient(90deg,var(--green),var(--mint)); }
     .view-grid { display: grid; grid-template-columns: 1fr 340px; gap: 18px; }
-    .row-task { display: grid; grid-template-columns: 120px 140px 150px 90px; gap: 10px; align-items: end; }
+    .row-task { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 12px; align-items: end; }
     .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     .row-3 { display: grid; grid-template-columns: 1.2fr 1fr 120px; gap: 10px; }
     .field { display: grid; gap: 6px; }
     .field span { color: var(--sub); font-size: 12px; font-weight: 900; }
     .task-field { grid-column: 1 / -1; }
-    .task-input { min-height: 96px; line-height: 1.55; resize: vertical; }
+    .task-input { min-height: 110px; line-height: 1.55; resize: vertical; }
+    .add-task-btn { min-height: 48px; }
     .quick { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
     .quick button { background: #fff; border: 1px solid var(--line); color: #1f2937; border-radius: 999px; padding: 9px 12px; }
     .toolbar { display: grid; grid-template-columns: 1fr 150px 130px; gap: 10px; margin: 12px 0; }
@@ -92,18 +93,18 @@
     .mini-card span { display: block; color: var(--sub); font-size: 12px; margin-bottom: 4px; }
     .mini-card b { font-size: 22px; }
     .timer { text-align: center; background: linear-gradient(135deg,#fff,#e8fff8); }
-    .timer-display { font-size: 42px; font-weight: 900; letter-spacing: .06em; margin: 10px 0; color: #0f766e; }
+    .timer-display { font-size: 42px; font-weight: 900; letter-spacing: .06em; margin: 10px 0; color: var(--green); }
     .timer-presets { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-top: 10px; }
     .focus-log { display: grid; gap: 8px; margin-top: 12px; text-align: left; }
     .focus-row { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 10px; }
     .date-tools { grid-template-columns: 170px 1fr 1fr; align-items: end; }
-    .task-actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+    .task-actions { grid-column: 2 / -1; display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-start; margin-top: -4px; }
     .task-actions button { padding: 9px 10px; border-radius: 12px; }
     .empty-state { border: 1px dashed #93dcca; border-radius: 20px; padding: 18px; text-align: center; background: rgba(255,255,255,.65); }
     .completed-summary { display: grid; grid-template-columns: repeat(auto-fit,minmax(130px,1fr)); gap: 10px; margin: 12px 0; }
-    .completed-pill { text-align: left; background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 10px 12px; color: #0f766e; }
+    .completed-pill { text-align: left; background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 10px 12px; color: var(--green); }
     .completed-pill b { display: block; font-size: 20px; color: var(--text); margin-top: 3px; }
-    .task-item { display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center; background: linear-gradient(135deg,#fff,#f2fffb); border: 1px solid var(--line); border-radius: 20px; padding: 14px; margin: 10px 0; }
+    .task-item { display: grid; grid-template-columns: auto 1fr; gap: 12px; align-items: start; background: linear-gradient(135deg,#fff,#f2fffb); border: 1px solid var(--line); border-radius: 20px; padding: 14px; margin: 10px 0; }
     .task-item.done { opacity: .62; }
     .task-item.done .task-title { text-decoration: line-through; }
     .check { width: 26px; height: 26px; padding: 0; border: 2px solid #93dcca; background: #fff; color: #fff; border-radius: 9px; }
@@ -112,6 +113,7 @@
     .meta { color: var(--sub); font-size: 13px; margin-top: 6px; line-height: 1.65; }
     .sub { color: var(--sub); line-height: 1.7; }
     .quote { margin: 8px 0 12px; color: var(--sub); line-height: 1.7; }
+    .theme-select { margin-top: 10px; padding: 10px 12px; border-radius: 14px; font-size: 13px; font-weight: 800; background: rgba(255,255,255,.92); color: var(--text); }
     .note-tabs { display: grid; gap: 10px; margin-top: 10px; }
     .note-tabs textarea { min-height: 92px; }
     .chart-card { margin-top: 12px; background: #fff; border: 1px solid var(--line); border-radius: 18px; padding: 12px; }
@@ -120,7 +122,7 @@
     .settings { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
     .notice { background: var(--yellow); color: #5f4b00; border: 1px solid #f9e58c; border-radius: 18px; padding: 14px; line-height: 1.7; margin: 12px 0; }
     .progress-shell { height: 16px; border-radius: 999px; background: #e8fff8; border: 1px solid var(--line); overflow: hidden; margin: 14px 0; }
-    .progress-fill { height: 100%; width: 0%; background: linear-gradient(90deg,#16a085,#8debd8); }
+    .progress-fill { height: 100%; width: 0%; background: linear-gradient(90deg,var(--green),var(--mint)); }
     .project-list { display: grid; gap: 12px; margin-top: 14px; }
     .project-card { background: linear-gradient(135deg,#fff,#f2fffb); border: 1px solid var(--line); border-radius: 20px; padding: 14px; }
     .project-head { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; }
@@ -129,13 +131,16 @@
     .kpis { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-top: 14px; }
     .kpis div { background: #fff; border: 1px solid var(--line); border-radius: 18px; padding: 14px; }
     .kpis b { display: block; font-size: 23px; margin-top: 5px; }
-    .toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%) translateY(20px); opacity: 0; pointer-events: none; background: linear-gradient(135deg,#6edac6,#a7f3d0); color: #102a2a; padding: 12px 16px; border-radius: 999px; font-weight: 900; transition: .2s; box-shadow: var(--shadow); max-width: 90vw; }
+    .toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%) translateY(20px); opacity: 0; pointer-events: none; background: linear-gradient(135deg,var(--mint),var(--soft-card,#a7f3d0)); color: var(--text); padding: 12px 16px; border-radius: 999px; font-weight: 900; transition: .2s; box-shadow: var(--shadow); max-width: 90vw; }
     .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
     @media(max-width: 900px) {
       .app, .hero, .view-grid, .row-task, .row-2, .row-3, .settings, .kpis, .toolbar, .mini-grid { grid-template-columns: 1fr; }
       .side { position: relative; height: auto; }
       .main { padding: 18px; }
       .hero h2 { font-size: 32px; }
+      .task-item { grid-template-columns: auto 1fr; }
+      .task-actions { grid-column: 2 / -1; justify-content: flex-start; }
+      .task-actions button { flex: 1 1 78px; }
     }
   </style>
 </head>
@@ -150,13 +155,14 @@
       <b id="dateText"></b>
       <p id="quoteText" class="quote">博士成长不是冲刺，是每天可追踪的一点点推进。</p>
       <span id="syncStatus" class="status">本地模式</span>
+      <label class="field"><span>主题颜色</span><select id="themeInput" class="theme-select"><option value="auto">每日自动</option><option value="orange">奶油橙</option><option value="pink">樱花粉</option><option value="purple">葡萄紫</option><option value="blue">晴空蓝</option><option value="cyan">海盐青</option><option value="green">抹茶绿</option><option value="yellow">香草黄</option></select></label>
     </div>
     <div class="nav">
       <button class="on" data-view="today">今日计划 <b id="countToday">0</b></button>
       <button data-view="thesis">项目进度 <b id="countProject">0</b></button>
       <button data-view="review">复盘归档 <b id="countDone">0</b></button>
       <button data-view="report">周报月报 <b>2</b></button>
-      <button data-view="cloud">云同步 <b>3.8</b></button>
+      <button data-view="cloud">云同步 <b>3.9</b></button>
     </div>
     <button id="pushSideBtn" class="ghost">推送云端</button>
     <button id="pullSideBtn" class="ghost">拉取云端</button>
@@ -192,7 +198,7 @@
           <label class="field"><span>类型</span><select id="typeInput"><option>论文</option><option>模型</option><option>文献</option><option>组会</option><option>比赛</option><option>行政</option><option>生活</option><option>运动</option></select></label>
           <label class="field"><span>优先级</span><select id="priorityInput"><option value="today">今天必须动</option><option value="week">本周推进</option><option value="low">有空再说</option></select></label>
           <label class="field"><span>计划日期</span><input id="dueDateInput" type="date" title="计划日期" /></label>
-          <button id="addTaskBtn" class="primary">加入</button>
+          <button id="addTaskBtn" class="primary add-task-btn">加入</button>
         </div>
         <div class="quick">
           <button data-template="读一篇文献，整理研究问题、方法、创新点和可借鉴处" data-type="文献">文献速读</button>
@@ -231,25 +237,6 @@
           </div>
           <button id="saveDailyBtn" class="primary" style="width:100%;margin-top:10px">保存打卡</button>
           <div class="chart-card"><b>本月精力量化折线图</b><div id="energyChart"></div></div>
-        </div>
-        <div class="card timer" style="margin-top:18px">
-          <h2>专注计时</h2>
-          <label class="field" style="text-align:left"><span>本轮专注事项</span><select id="focusTaskSelect"></select></label>
-          <input id="focusTopicInput" style="margin-top:8px" placeholder="或手动填写专注内容" />
-          <div id="timerDisplay" class="timer-display">25:00</div>
-          <p id="timerHint" class="sub">选择一个任务，开始一轮不被打扰的推进；完成后会自动记录日期、事项和分钟数。</p>
-          <div class="quick" style="justify-content:center">
-            <button id="startTimerBtn" class="primary">开始</button>
-            <button id="pauseTimerBtn" class="ghost">暂停</button>
-            <button id="resetTimerBtn" class="ghost">重置</button>
-            <button id="logFocusBtn" class="ghost">记录本轮</button>
-          </div>
-          <div class="timer-presets">
-            <button data-minutes="15" class="ghost">15m</button>
-            <button data-minutes="25" class="ghost">25m</button>
-            <button data-minutes="50" class="ghost">50m</button>
-          </div>
-          <div id="focusLogList" class="focus-log"></div>
         </div>
         <div class="card timer" style="margin-top:18px">
           <h2>专注计时</h2>
@@ -388,13 +375,13 @@ const QUOTES = [
   '能量低时也可以推进：整理、标注、列问题都算数。'
 ];
 const PASTEL_THEMES = [
-  { bg1: '#fff7ed', bg2: '#fed7aa', soft: '#fff1e6', mint: '#fdba74', green: '#ea580c', line: '#fed7aa' },
-  { bg1: '#fdf2f8', bg2: '#fbcfe8', soft: '#fce7f3', mint: '#f9a8d4', green: '#db2777', line: '#fbcfe8' },
-  { bg1: '#f5f3ff', bg2: '#ddd6fe', soft: '#ede9fe', mint: '#c4b5fd', green: '#7c3aed', line: '#ddd6fe' },
-  { bg1: '#eff6ff', bg2: '#bfdbfe', soft: '#dbeafe', mint: '#93c5fd', green: '#2563eb', line: '#bfdbfe' },
-  { bg1: '#ecfeff', bg2: '#a5f3fc', soft: '#cffafe', mint: '#67e8f9', green: '#0891b2', line: '#a5f3fc' },
-  { bg1: '#f0fdf4', bg2: '#bbf7d0', soft: '#dcfce7', mint: '#86efac', green: '#16a34a', line: '#bbf7d0' },
-  { bg1: '#fffbeb', bg2: '#fde68a', soft: '#fef3c7', mint: '#fcd34d', green: '#d97706', line: '#fde68a' }
+  { key: 'orange', bg1: '#fff7ed', bg2: '#fed7aa', soft: '#fff1e6', mint: '#fdba74', green: '#c2410c', line: '#fed7aa' },
+  { key: 'pink', bg1: '#fdf2f8', bg2: '#fbcfe8', soft: '#fce7f3', mint: '#f9a8d4', green: '#be185d', line: '#fbcfe8' },
+  { key: 'purple', bg1: '#f5f3ff', bg2: '#ddd6fe', soft: '#ede9fe', mint: '#c4b5fd', green: '#6d28d9', line: '#ddd6fe' },
+  { key: 'blue', bg1: '#eff6ff', bg2: '#bfdbfe', soft: '#dbeafe', mint: '#93c5fd', green: '#1d4ed8', line: '#bfdbfe' },
+  { key: 'cyan', bg1: '#ecfeff', bg2: '#a5f3fc', soft: '#cffafe', mint: '#67e8f9', green: '#0e7490', line: '#a5f3fc' },
+  { key: 'green', bg1: '#f0fdf4', bg2: '#bbf7d0', soft: '#dcfce7', mint: '#86efac', green: '#15803d', line: '#bbf7d0' },
+  { key: 'yellow', bg1: '#fffbeb', bg2: '#fde68a', soft: '#fef3c7', mint: '#fcd34d', green: '#b45309', line: '#fde68a' }
 ];
 function currentQuote() {
   const hourSeed = Math.floor(Date.now() / 3600000);
@@ -405,7 +392,8 @@ function renderQuote() {
   if (node) node.textContent = currentQuote();
 }
 function applyDailyTheme() {
-  const theme = PASTEL_THEMES[daysBetween('2026-01-01', TODAY) % PASTEL_THEMES.length];
+  const selected = settings.theme || 'auto';
+  const theme = selected === 'auto' ? PASTEL_THEMES[daysBetween('2026-01-01', TODAY) % PASTEL_THEMES.length] : (PASTEL_THEMES.find(item => item.key === selected) || PASTEL_THEMES[0]);
   const root = document.documentElement;
   root.style.setProperty('--line', theme.line);
   root.style.setProperty('--mint', theme.mint);
@@ -463,8 +451,8 @@ function loadState() {
   catch { return { tasks: [], daily: {}, archive: {}, thesis: {}, projects: [], focusSessions: [] }; }
 }
 function loadSettings() {
-  try { return Object.assign({ url: '', anon: '', email: '' }, JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}')); }
-  catch { return { url: '', anon: '', email: '' }; }
+  try { return Object.assign({ url: '', anon: '', email: '', theme: 'auto' }, JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}')); }
+  catch { return { url: '', anon: '', email: '', theme: 'auto' }; }
 }
 function toast(message) {
   const node = $('toast');
@@ -576,13 +564,16 @@ function normalizeProject(project) {
 function normalizeFocusSession(session) {
   const startedAt = session.startedAt || session.createdAt || new Date().toISOString();
   const date = session.date || toDateKey(new Date(startedAt));
+  const rawMinutes = Number(session.minutes || 0);
+  const minutes = Number.isFinite(rawMinutes) ? Math.max(1, Math.round(rawMinutes)) : 1;
+  const rawPreset = Number(session.presetMinutes || session.minutes || minutes);
   return {
     id: session.id || (crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random())),
     date,
     topic: session.topic || session.text || '未命名专注',
     taskId: session.taskId || '',
-    minutes: Math.max(1, Math.round(Number(session.minutes || 0))),
-    presetMinutes: Number(session.presetMinutes || session.minutes || 0),
+    minutes,
+    presetMinutes: Number.isFinite(rawPreset) ? rawPreset : minutes,
     startedAt,
     endedAt: session.endedAt || startedAt,
     source: session.source || 'manual'
@@ -725,6 +716,10 @@ function currentElapsedMinutes() {
 function logFocusSession(minutes = currentElapsedMinutes(), source = 'manual') {
   const { topic, taskId } = currentFocusTopic();
   if (!topic.trim()) return toast('先选择或填写专注事项');
+  if (timerId) {
+    clearInterval(timerId);
+    timerId = null;
+  }
   const now = new Date().toISOString();
   const startedAt = timerStartedAt || new Date(Date.now() - minutes * 60000).toISOString();
   state.focusSessions.unshift(normalizeFocusSession({
@@ -1010,8 +1005,10 @@ function render() {
   renderSyncStatus();
 }
 function showView(view) {
+  const target = $(`view-${view}`);
+  if (!target) return;
   document.querySelectorAll('.view').forEach(node => node.classList.add('hidden'));
-  $(`view-${view}`).classList.remove('hidden');
+  target.classList.remove('hidden');
   document.querySelectorAll('.nav button').forEach(btn => btn.classList.toggle('on', btn.dataset.view === view));
 }
 function copyReport() {
@@ -1056,6 +1053,7 @@ function initSupabaseFromInputs() {
   settings.url = $('supabaseUrlInput').value.trim();
   settings.anon = $('supabaseAnonInput').value.trim();
   settings.email = $('emailInput').value.trim();
+  settings.theme = $('themeInput')?.value || settings.theme || 'auto';
   localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
   if (!settings.url || !settings.anon) { toast('先填写 URL 和 anon key'); return null; }
   if (!window.supabase) { toast('Supabase SDK 未加载，检查网络或 CDN'); return null; }
@@ -1152,6 +1150,7 @@ function renderTimer() {
 }
 function setTimer(minutes) {
   pauseTimer();
+  timerStartedAt = null;
   timerDefaultSeconds = minutes * 60;
   timerSeconds = timerDefaultSeconds;
   $('timerHint').textContent = `${minutes} 分钟专注轮已准备好。`;
@@ -1194,6 +1193,7 @@ function bindEvents() {
   });
   document.querySelectorAll('.nav button').forEach(btn => btn.addEventListener('click', () => showView(btn.dataset.view)));
   $('saveDailyBtn').addEventListener('click', saveDaily);
+  $('themeInput').addEventListener('change', () => { settings.theme = $('themeInput').value; localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); applyDailyTheme(); toast('主题颜色已更新'); });
   $('saveProjectBtn').addEventListener('click', saveProject);
   $('resetProjectBtn').addEventListener('click', resetProjectForm);
   $('generateReviewBtn').addEventListener('click', () => generateReview());
@@ -1236,6 +1236,7 @@ async function init() {
   $('supabaseUrlInput').value = settings.url || '';
   $('supabaseAnonInput').value = settings.anon || '';
   $('emailInput').value = settings.email || '';
+  $('themeInput').value = settings.theme || 'auto';
   $('dueDateInput').value = TODAY;
   $('archiveDateInput').value = TODAY;
   applyDailyTheme();
