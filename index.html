@@ -145,12 +145,18 @@
     .celebration-bubble b { display: block; font-size: 26px; margin-bottom: 6px; }
     .confetti { position: absolute; width: 10px; height: 16px; border-radius: 4px; background: var(--mint); animation: confetti 1.15s ease-out forwards; }
     .ai-panel { margin-top: 14px; padding: 14px; border: 1px solid var(--line); border-radius: 20px; background: linear-gradient(135deg,#fff,var(--soft-card)); }
-    .ai-panel textarea { min-height: 120px; }
+    .report-output { min-height: 300px; font-size: 15px; line-height: 1.75; }
+    .ai-panel textarea, .ai-review-output { min-height: 420px; font-size: 15px; line-height: 1.75; }
+    .ai-archive-list { display: grid; gap: 10px; margin-top: 12px; }
     @keyframes pop { 0% { transform: scale(.78); opacity: .2; } 55% { transform: scale(1.05); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
     @keyframes confetti { 0% { transform: translate(0,0) rotate(0deg); opacity: 1; } 100% { transform: translate(var(--dx),var(--dy)) rotate(520deg); opacity: 0; } }
     @media(max-width: 900px) {
       .app, .hero, .view-grid, .row-task, .row-2, .row-3, .settings, .kpis, .toolbar, .mini-grid { grid-template-columns: 1fr; }
-      .side { position: relative; height: auto; }
+      body { padding-bottom: 88px; }
+      .side { position: relative; height: auto; padding-bottom: 12px; }
+      .side > .nav { position: fixed; left: 10px; right: 10px; bottom: 10px; z-index: 30; grid-template-columns: repeat(5,1fr); gap: 6px; padding: 8px; border: 1px solid var(--line); border-radius: 22px; background: rgba(255,255,255,.92); box-shadow: var(--shadow); backdrop-filter: blur(16px); }
+      .side > .nav button { justify-content: center; text-align: center; flex-direction: column; gap: 2px; padding: 8px 4px; border-radius: 15px; font-size: 12px; line-height: 1.2; min-height: 54px; }
+      .side > .nav button b { font-size: 11px; }
       .main { padding: 18px; }
       .hero h2 { font-size: 32px; }
       .task-item { grid-template-columns: auto 1fr; }
@@ -176,8 +182,7 @@
       <button class="on" data-view="today">今日计划 <b id="countToday">0</b></button>
       <button data-view="thesis">项目进度 <b id="countProject">0</b></button>
       <button data-view="review">复盘归档 <b id="countDone">0</b></button>
-      <button data-view="ai">AI复盘 <b>4.0</b></button>
-      <button data-view="report">周报月报 <b>2</b></button>
+      <button data-view="report">周报AI <b>3</b></button>
       <button data-view="cloud">云同步 <b>4.0</b></button>
     </div>
     <button id="pushSideBtn" class="ghost">推送云端</button>
@@ -320,12 +325,18 @@
       <div id="archiveList"></div>
     </section>
 
-    <section id="view-ai" class="view card hidden">
-      <h2>AI 数据复盘</h2>
-      <p class="sub">AI 复盘已拆成独立页面：前端只调用你自己的 Supabase Edge Function，真正的 DeepSeek / OpenAI 兼容接口由后端函数代请求。配置保存到当前登录账号，换设备登录后可读取。</p>
-      <div class="notice"><b>部署提示：</b>先运行 `schema.sql`，再部署 `supabase/functions/ai-review`。前端不会直接请求 DeepSeek；“测试后端通道”只验证函数和账号配置是否可用。</div>
+
+    <section id="view-report" class="view card hidden">
+      <h2>周报 / 月报 / AI 复盘</h2>
+      <p class="sub">周期复盘和 AI 复盘统一放在这里；单日复盘仍在“复盘归档”中手动生成和保存。</p>
+      <button id="weekReportBtn" class="primary">生成周报</button>
+      <button id="monthReportBtn" class="ghost">生成月报</button>
+      <button id="copyReportBtn" class="ghost">复制报告</button>
+      <textarea id="reportText" class="report-output" style="margin-top:12px" placeholder="周报/月报会显示在这里"></textarea>
       <div class="ai-panel">
-        <h3>账号 AI 配置</h3>
+        <h3>AI 周期复盘</h3>
+        <p class="sub">前端只调用你自己的 Supabase Edge Function，真正的 DeepSeek / OpenAI 兼容接口由后端函数代请求。生成后的 AI 复盘会按今天日期自动归档；同一天再次生成会覆盖更新。</p>
+        <div class="notice"><b>部署提示：</b>先运行 `schema.sql`，再部署 `supabase/functions/ai-review`。可先点“测试后端通道”确认函数和账号配置可用。</div>
         <div class="settings">
           <label class="field"><span>后端函数名</span><input id="aiFunctionInput" placeholder="ai-review" /></label>
           <label class="field"><span>供应商</span><select id="aiProviderInput"><option value="deepseek">DeepSeek</option><option value="openai">OpenAI 兼容</option><option value="custom">自定义兼容接口</option></select></label>
@@ -338,18 +349,12 @@
           <button id="saveAiSettingsBtn" class="primary">保存到账号</button>
           <button id="loadAiSettingsBtn" class="ghost">读取账号配置</button>
           <button id="testAiBackendBtn" class="ghost">测试后端通道</button>
-          <button id="aiReviewBtn" class="primary">生成 AI 复盘</button>
+          <button id="aiReviewBtn" class="primary">生成并归档 AI 复盘</button>
         </div>
+        <textarea id="aiReviewText" class="ai-review-output" style="margin-top:12px" placeholder="AI 周期复盘结果会显示在这里，并自动归档到下方。"></textarea>
+        <h3>AI 复盘档案</h3>
+        <div id="aiArchiveList" class="ai-archive-list"></div>
       </div>
-      <textarea id="aiReviewText" style="margin-top:12px" placeholder="AI 复盘结果会显示在这里，不会写入每日复盘归档。"></textarea>
-    </section>
-
-    <section id="view-report" class="view card hidden">
-      <h2>周报 / 月报</h2>
-      <button id="weekReportBtn" class="primary">生成周报</button>
-      <button id="monthReportBtn" class="ghost">生成月报</button>
-      <button id="copyReportBtn" class="ghost">复制报告</button>
-      <textarea id="reportText" style="margin-top:12px"></textarea>
     </section>
 
     <section id="view-cloud" class="view card hidden">
@@ -494,8 +499,8 @@ function renderEnergyChart() {
 }
 
 function loadState() {
-  try { return Object.assign({ tasks: [], daily: {}, archive: {}, thesis: {}, projects: [], focusSessions: [] }, JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}')); }
-  catch { return { tasks: [], daily: {}, archive: {}, thesis: {}, projects: [], focusSessions: [] }; }
+  try { return Object.assign({ tasks: [], daily: {}, archive: {}, aiReviews: {}, thesis: {}, projects: [], focusSessions: [] }, JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}')); }
+  catch { return { tasks: [], daily: {}, archive: {}, aiReviews: {}, thesis: {}, projects: [], focusSessions: [] }; }
 }
 function loadSettings() {
   try { return Object.assign({ url: '', anon: '', email: '', theme: 'auto', aiFunction: 'ai-review', aiProvider: 'deepseek', aiBaseUrl: 'https://api.deepseek.com', aiModel: 'deepseek-chat' }, JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}')); }
@@ -562,6 +567,7 @@ function ensureToday() {
   if (!state.daily) state.daily = {};
   if (!state.daily[TODAY]) state.daily[TODAY] = { focus: '', energy: '50', mood: '稳定', researchNote: '', fitnessNote: '', growthNote: '', checked: false };
   if (!state.thesis) state.thesis = { title: '', stage: '选题构思', progress: 0, done: '', next: '', blockers: '', updatedAt: '' };
+  if (!state.aiReviews) state.aiReviews = {};
   if (!Array.isArray(state.projects)) state.projects = [];
   if (!Array.isArray(state.focusSessions)) state.focusSessions = [];
 }
@@ -1040,6 +1046,35 @@ function loadArchiveDate() {
   const dateKey = selectedArchiveDate();
   loadArchive(dateKey);
 }
+function aiReviewKey() { return `${TODAY}-period`; }
+function saveAiReviewArchive(text) {
+  if (!state.aiReviews) state.aiReviews = {};
+  state.aiReviews[aiReviewKey()] = {
+    date: TODAY,
+    title: `${TODAY} AI 周期复盘`,
+    text,
+    savedAt: new Date().toISOString()
+  };
+  saveLocal();
+}
+function renderAiArchive() {
+  const node = $('aiArchiveList');
+  if (!node) return;
+  const entries = Object.entries(state.aiReviews || {}).sort((a, b) => (b[1].savedAt || '').localeCompare(a[1].savedAt || ''));
+  node.innerHTML = entries.length ? entries.map(([key, item]) => `
+    <div class="task-item">
+      <div><b>${escapeHtml(item.title || key)}</b><div class="meta">更新：${formatTime(item.savedAt)}</div></div>
+      <button class="ghost" onclick="loadAiReviewArchive('${key}')">查看</button>
+    </div>
+  `).join('') : '<p class="sub">还没有 AI 复盘档案。生成 AI 周期复盘后会自动保存；同一天重复生成会覆盖更新。</p>';
+}
+function loadAiReviewArchive(key) {
+  const item = state.aiReviews?.[key];
+  if (!item) return;
+  $('aiReviewText').value = item.text || '';
+  $('aiStatusInput').value = `已读取归档 · ${formatTime(item.savedAt)}`;
+  showView('report');
+}
 function generateReport(days) {
   const end = new Date();
   const start = new Date();
@@ -1187,15 +1222,16 @@ async function generateAiReview() {
     const data = await callAiBackend('review');
     const text = data?.text || 'AI 没有返回文本';
     $('aiReviewText').value = text;
-    $('aiStatusInput').value = `复盘完成 · ${formatTime(new Date().toISOString())}`;
-    toast('AI 复盘已生成');
+    $('aiStatusInput').value = `复盘完成并已归档 · ${formatTime(new Date().toISOString())}`;
+    saveAiReviewArchive(text);
+    toast('AI 复盘已生成并归档');
   } catch (error) {
     $('aiReviewText').value = `AI 复盘失败：${error.message}`;
     $('aiStatusInput').value = `复盘失败：${error.message}`;
     toast(`AI 复盘失败：${error.message}`);
   } finally {
     button.disabled = false;
-    button.textContent = '生成 AI 复盘';
+    button.textContent = '生成并归档 AI 复盘';
   }
 }
 
@@ -1226,6 +1262,7 @@ function render() {
   renderStats();
   renderFocusLog();
   renderArchive();
+  renderAiArchive();
   renderProjects();
   renderEnergyChart();
   renderQuote();
@@ -1264,7 +1301,10 @@ function exportAll() {
     ...(state.focusSessions || []).map(session => `- ${session.date} | ${session.topic} | ${session.minutes} 分钟 | ${formatTime(session.startedAt)} - ${formatTime(session.endedAt)}`),
     '',
     '## 成长档案',
-    ...Object.keys(state.archive || {}).sort().map(key => `### ${key}\n${state.archive[key].text || ''}`)
+    ...Object.keys(state.archive || {}).sort().map(key => `### ${key}\n${state.archive[key].text || ''}`),
+    '',
+    '## AI 周期复盘档案',
+    ...Object.keys(state.aiReviews || {}).sort().map(key => `### ${state.aiReviews[key].title || key}\n${state.aiReviews[key].text || ''}`)
   ];
   const blob = new Blob([lines.join('\n')], { type: 'text/markdown;charset=utf-8' });
   const url = URL.createObjectURL(blob);
@@ -1362,7 +1402,7 @@ async function pullCloud(options = {}) {
   const { data, error } = await supabaseClient.from('research_growth_states').select('state').eq('user_id', currentUser.id).maybeSingle();
   if (error) { if (!silent) toast(`拉取失败：${error.message}`); return false; }
   if (!data || !data.state) { if (!silent) toast('云端还没有数据，先推送一次'); return false; }
-  state = Object.assign({ tasks: [], daily: {}, archive: {}, thesis: {}, projects: [], focusSessions: [] }, data.state);
+  state = Object.assign({ tasks: [], daily: {}, archive: {}, aiReviews: {}, thesis: {}, projects: [], focusSessions: [] }, data.state);
   migrateState();
   fillDaily();
   resetProjectForm();
@@ -1443,7 +1483,7 @@ function bindEvents() {
   $('exportBtn').addEventListener('click', exportAll);
   $('clearBtn').addEventListener('click', () => {
     if (!confirm('清空本地数据？云端不会自动删除。')) return;
-    state = { tasks: [], daily: {}, archive: {}, thesis: {}, projects: [], focusSessions: [] };
+    state = { tasks: [], daily: {}, archive: {}, aiReviews: {}, thesis: {}, projects: [], focusSessions: [] };
     migrateState();
     fillDaily();
     resetProjectForm();

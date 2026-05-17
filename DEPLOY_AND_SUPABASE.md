@@ -15,5 +15,5 @@
 ## 4.0 AI 复盘后端函数
 1. 先在 Supabase SQL Editor 重新运行仓库根目录的 `schema.sql`，创建 `research_growth_ai_settings`。
 2. 部署 Edge Function：`supabase functions deploy ai-review`。
-3. 前端“AI复盘”页只会调用 Supabase Function `ai-review`，不会直接请求 DeepSeek / OpenAI 兼容接口。
-4. 在“AI复盘”页保存供应商、Base URL、模型和 API Key 后，可点击“测试后端通道”确认账号配置与函数可用。
+3. 前端“周报AI”页只会调用 Supabase Function `ai-review`，不会直接请求 DeepSeek / OpenAI 兼容接口。
+4. 在“周报AI”页保存供应商、Base URL、模型和 API Key 后，可点击“测试后端通道”确认账号配置与函数可用。
