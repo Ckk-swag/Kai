@@ -3,6 +3,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
 type AiSettings = {
@@ -14,6 +15,7 @@ type AiSettings = {
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
+  if (req.method !== 'POST') return json({ ok: false, error: '只支持 POST 请求' }, 405);
 
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
@@ -42,7 +44,9 @@ Deno.serve(async (req) => {
     }
     if (body.mode !== 'review') throw new Error('未知 AI 操作');
 
-    const text = await requestAiReview(settings, body.reviewData, body.periodLabel || body.reviewData?.period?.type || '周报');
+    const reviewMode = body.reviewMode === 'custom' ? 'custom' : 'weekly';
+    const userRequest = String(body.userRequest || '').slice(0, 2000);
+    const text = await requestAiReview(settings, body.reviewData, reviewMode, userRequest);
     return json({ ok: true, provider: settings.provider, model: settings.model, text });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
@@ -50,9 +54,12 @@ Deno.serve(async (req) => {
   }
 });
 
-async function requestAiReview(settings: AiSettings, reviewData: unknown, periodLabel: string) {
+async function requestAiReview(settings: AiSettings, reviewData: unknown, reviewMode: 'weekly' | 'custom', userRequest: string) {
   const baseUrl = (settings.api_base_url || 'https://api.deepseek.com').replace(/\/$/, '');
   const endpoint = `${baseUrl}/chat/completions`;
+  const prompt = reviewMode === 'custom'
+    ? `请按用户的自定义需求处理这些成长数据。用户需求：${userRequest || '请给出可执行建议'}。数据：${JSON.stringify(reviewData)}`
+    : `请总结最近一周内容，输出：本周概览、完成与专注、项目进展、主要卡点、下周三项行动、具体鼓励。数据：${JSON.stringify(reviewData)}`;
   const res = await fetch(endpoint, {
     method: 'POST',
     headers: {
@@ -62,8 +69,8 @@ async function requestAiReview(settings: AiSettings, reviewData: unknown, period
     body: JSON.stringify({
       model: settings.model || 'deepseek-chat',
       messages: [
-        { role: 'system', content: '你是一个温柔但具体的博士成长教练。请基于用户提供的结构化数据，用中文生成周期报告。严禁使用 Markdown 语法，不要使用 #、*、- 作为标题或列表符号；请使用普通中文段落、中文编号和清晰小标题。' },
-        { role: 'user', content: `请生成一份${periodLabel}。内容包括：一、周期概览；二、完成和专注投入；三、项目进展；四、主要卡点；五、下个周期建议；六、一句具体鼓励。请输出普通文本，不要 Markdown。数据：${JSON.stringify(reviewData)}` },
+        { role: 'system', content: '你是一个温柔但具体的博士成长教练。请基于用户提供的结构化数据，用中文输出。可以使用 Markdown 标题和列表，但结构要清晰，便于前端渲染成阅读版。' },
+        { role: 'user', content: prompt },
       ],
       temperature: 0.7,
     }),

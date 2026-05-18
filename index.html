@@ -68,6 +68,15 @@
     .nav { display: grid; gap: 8px; }
     .side-actions { display: grid; gap: 14px; }
     .mobile-actions { display: none; }
+    .mobile-action-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-top: 10px; }
+    .markdown-preview { margin-top: 12px; padding: 16px; min-height: 220px; border: 1px solid var(--line); border-radius: 18px; background: #fff; line-height: 1.8; white-space: normal; }
+    .markdown-preview h2, .markdown-preview h3, .markdown-preview h4 { margin: 16px 0 8px; color: var(--theme-contrast); }
+    .markdown-preview h2 { font-size: 22px; }
+    .markdown-preview h3 { font-size: 19px; }
+    .markdown-preview h4 { font-size: 16px; }
+    .markdown-preview p { margin: 8px 0; }
+    .markdown-preview ul, .markdown-preview ol { padding-left: 1.35em; margin: 8px 0; }
+    .markdown-preview code { background: var(--soft-card); padding: 2px 5px; border-radius: 6px; }
     .nav button { background: #fff; border: 1px solid var(--line); color: #1f2937; text-align: left; display: flex; justify-content: space-between; align-items: center; }
     .nav button.on { background: linear-gradient(135deg,var(--soft-card),rgba(255,255,255,.95)); color: var(--theme-contrast); border-color: var(--mint); }
     .primary { background: linear-gradient(135deg,var(--mint),var(--soft-card)); color: var(--theme-contrast); }
@@ -160,7 +169,8 @@
       .side > .nav button { justify-content: center; text-align: center; flex-direction: column; gap: 2px; padding: 8px 4px; border-radius: 15px; font-size: 12px; line-height: 1.2; min-height: 54px; }
       .side > .nav button b { font-size: 11px; }
       .side-actions { display: none; }
-      .mobile-actions { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin: 18px; padding: 12px; border: 1px solid var(--line); border-radius: 22px; background: rgba(255,255,255,.72); box-shadow: var(--shadow); }
+      .mobile-actions { display: block; margin: 0 18px 12px; padding: 12px; border: 1px solid var(--line); border-radius: 22px; background: rgba(255,255,255,.72); box-shadow: var(--shadow); }
+      .mobile-actions summary { cursor: pointer; font-weight: 900; color: var(--theme-contrast); }
       .mobile-actions button { padding: 10px 8px; border-radius: 14px; }
       .main { padding: 18px; }
       .hero h2 { font-size: 32px; }
@@ -174,20 +184,22 @@
 <div class="app">
   <aside class="side">
     <div class="brand">
-      <div class="logo">开</div>
-      <div><h1>开开的博士成长计划</h1><p>计划 · 项目 · 复盘 · 云同步</p></div>
+      <div id="brandLogo" class="logo">开</div>
+      <div><h1 id="brandTitle">开开的博士成长计划</h1><p id="brandSubtitle">计划 · 项目 · 复盘 · 云同步</p></div>
     </div>
     <div class="card today-card">
       <b id="dateText"></b>
       <p id="quoteText" class="quote">博士成长不是冲刺，是每天可追踪的一点点推进。</p>
       <span id="syncStatus" class="status">本地模式</span>
       <label class="field"><span>主题颜色</span><select id="themeInput" class="theme-select"><option value="auto">每日自动</option><option value="orange">奶油橙</option><option value="pink">樱花粉</option><option value="purple">葡萄紫</option><option value="blue">晴空蓝</option><option value="cyan">海盐青</option><option value="green">抹茶绿</option><option value="yellow">香草黄</option></select></label>
+      <div class="row-2" style="margin-top:10px"><label class="field"><span>头像</span><input id="brandLogoInput" maxlength="4" placeholder="开 / 🌱" /></label><label class="field"><span>标题</span><input id="brandTitleInput" placeholder="开开的博士成长计划" /></label></div>
+      <label class="field" style="margin-top:10px"><span>副标题</span><input id="brandSubtitleInput" placeholder="计划 · 项目 · 复盘 · 云同步" /></label>
     </div>
     <div class="nav">
       <button class="on" data-view="today">今日计划 <b id="countToday">0</b></button>
       <button data-view="thesis">项目进度 <b id="countProject">0</b></button>
       <button data-view="review">复盘归档 <b id="countDone">0</b></button>
-      <button data-view="report">周报AI <b>3</b></button>
+      <button data-view="report">AI总结 <b>3</b></button>
       <button data-view="cloud">云同步 <b>4.1</b></button>
     </div>
     <div class="side-actions">
@@ -197,6 +209,14 @@
       <button id="clearBtn" class="danger">清空本地</button>
     </div>
   </aside>
+  <details class="mobile-actions">
+    <summary>云端 / 导出工具</summary>
+    <div class="mobile-action-grid">
+      <button id="pushMobileBtn" class="ghost">推送云端</button>
+      <button id="pullMobileBtn" class="ghost">拉取云端</button>
+      <button id="exportMobileBtn" class="ghost">导出全部</button>
+    </div>
+  </details>
 
   <main class="main">
     <section class="hero">
@@ -334,15 +354,11 @@
 
 
     <section id="view-report" class="view card hidden">
-      <h2>周报 / 月报 / AI 复盘</h2>
-      <p class="sub">周报、月报和 AI 生成统一放在这里；单日复盘仍在“复盘归档”中手动生成和保存。</p>
-      <button id="weekReportBtn" class="primary">生成周报</button>
-      <button id="monthReportBtn" class="ghost">生成月报</button>
-      <button id="copyReportBtn" class="ghost">复制报告</button>
-      <textarea id="reportText" class="report-output" style="margin-top:12px" placeholder="周报/月报会显示在这里"></textarea>
+      <h2>AI 每周总结 / 自定义处理</h2>
+      <p class="sub">手动周报/月报按钮已移除；现在由 AI 根据每周数据生成总结，或者按你输入的需求处理当前数据并归档。</p>
       <div class="ai-panel">
-        <h3>AI 周报月报</h3>
-        <p class="sub">前端只调用你自己的 Supabase Edge Function，真正的 DeepSeek / OpenAI 兼容接口由后端函数代请求。AI 会按你选择的周期生成周报或月报，输出为普通中文段落（不使用 Markdown 符号）；结果会自动归档，同一天同周期再次生成会覆盖更新。</p>
+        <h3>AI 总结与处理</h3>
+        <p class="sub">前端只调用你自己的 Supabase Edge Function。默认总结最近 7 天内容；也可以选择“自定义需求”，直接告诉 AI 你想让它做什么。输出会同时保存原文，并渲染成可阅读版本。</p>
         <div class="notice"><b>部署提示：</b>先运行 `schema.sql`，再部署 `supabase/functions/ai-review`。可先点“测试后端通道”确认函数和账号配置可用。</div>
         <div class="settings">
           <label class="field"><span>后端函数名</span><input id="aiFunctionInput" placeholder="ai-review" /></label>
@@ -352,14 +368,18 @@
           <label class="field"><span>API Key</span><input id="aiKeyInput" type="password" placeholder="保存到当前 Supabase 账号" /></label>
           <label class="field"><span>配置状态</span><input id="aiStatusInput" readonly placeholder="未读取" /></label>
         </div>
-        <label class="field" style="margin-top:10px"><span>AI 生成类型</span><select id="aiPeriodInput"><option value="7">AI 生成周报</option><option value="30">AI 生成月报</option></select></label>
+        <label class="field" style="margin-top:10px"><span>AI 模式</span><select id="aiModeInput"><option value="weekly">总结最近一周</option><option value="custom">按我的需求处理</option></select></label>
+        <textarea id="aiRequestInput" style="margin-top:10px;min-height:110px" placeholder="自定义需求示例：帮我找出本周拖延最多的任务类型，并给出明天的三步计划。选择“按我的需求处理”时会使用这里的内容。"></textarea>
         <div class="quick">
           <button id="saveAiSettingsBtn" class="primary">保存到账号</button>
           <button id="loadAiSettingsBtn" class="ghost">读取账号配置</button>
           <button id="testAiBackendBtn" class="ghost">测试后端通道</button>
-          <button id="aiReviewBtn" class="primary">AI 生成并归档</button>
+          <button id="aiReviewBtn" class="primary">AI 处理并归档</button>
+          <button id="copyAiReviewBtn" class="ghost">复制 AI 输出</button>
         </div>
-        <textarea id="aiReviewText" class="ai-review-output" style="margin-top:12px" placeholder="AI 生成的周报/月报会显示在这里，并自动归档到下方。"></textarea>
+        <textarea id="aiReviewText" class="ai-review-output" style="margin-top:12px" placeholder="AI 原始输出会显示在这里，并自动归档到下方。"></textarea>
+        <h3>阅读版</h3>
+        <div id="aiReviewPreview" class="markdown-preview"><p class="sub">AI 输出会在这里渲染为阅读版。</p></div>
         <h3>AI 复盘档案</h3>
         <div id="aiArchiveList" class="ai-archive-list"></div>
       </div>
@@ -516,8 +536,8 @@ function loadState() {
   catch { return { tasks: [], daily: {}, archive: {}, aiReviews: {}, thesis: {}, projects: [], focusSessions: [] }; }
 }
 function loadSettings() {
-  try { return Object.assign({ url: '', anon: '', email: '', theme: 'auto', aiFunction: 'ai-review', aiProvider: 'deepseek', aiBaseUrl: 'https://api.deepseek.com', aiModel: 'deepseek-chat' }, JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}')); }
-  catch { return { url: '', anon: '', email: '', theme: 'auto', aiFunction: 'ai-review', aiProvider: 'deepseek', aiBaseUrl: 'https://api.deepseek.com', aiModel: 'deepseek-chat' }; }
+  try { return Object.assign({ url: '', anon: '', email: '', theme: 'auto', brandLogo: '开', brandTitle: '开开的博士成长计划', brandSubtitle: '计划 · 项目 · 复盘 · 云同步', aiFunction: 'ai-review', aiProvider: 'deepseek', aiBaseUrl: 'https://api.deepseek.com', aiModel: 'deepseek-chat' }, JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}')); }
+  catch { return { url: '', anon: '', email: '', theme: 'auto', brandLogo: '开', brandTitle: '开开的博士成长计划', brandSubtitle: '计划 · 项目 · 复盘 · 云同步', aiFunction: 'ai-review', aiProvider: 'deepseek', aiBaseUrl: 'https://api.deepseek.com', aiModel: 'deepseek-chat' }; }
 }
 function toast(message) {
   const node = $('toast');
@@ -533,6 +553,69 @@ function formatTime(value) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
   return date.toLocaleString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+}
+function renderMarkdown(text) {
+  const lines = String(text || '').split('\n');
+  let html = '';
+  let listTag = '';
+  const closeList = () => {
+    if (listTag) {
+      html += `</${listTag}>`;
+      listTag = '';
+    }
+  };
+  const openList = tag => {
+    if (listTag === tag) return;
+    closeList();
+    html += `<${tag}>`;
+    listTag = tag;
+  };
+  const inline = value => escapeHtml(value)
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    .replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
+  lines.forEach(line => {
+    const trimmed = line.trim();
+    if (!trimmed) { closeList(); return; }
+    const heading = trimmed.match(/^(#{1,4})\s+(.+)$/);
+    if (heading) {
+      closeList();
+      const level = Math.min(4, Math.max(2, heading[1].length + 1));
+      html += `<h${level}>${inline(heading[2])}</h${level}>`;
+      return;
+    }
+    const bullet = trimmed.match(/^[-*]\s+(.+)$/);
+    if (bullet) { openList('ul'); html += `<li>${inline(bullet[1])}</li>`; return; }
+    const ordered = trimmed.match(/^\d+[.)]\s+(.+)$/);
+    if (ordered) { openList('ol'); html += `<li>${inline(ordered[1])}</li>`; return; }
+    closeList();
+    html += `<p>${inline(trimmed)}</p>`;
+  });
+  closeList();
+  return html || '<p class="sub">暂无内容</p>';
+}
+function updateAiPreview(text = $('aiReviewText')?.value || '') {
+  const node = $('aiReviewPreview');
+  if (node) node.innerHTML = renderMarkdown(text);
+}
+function applyBrandSettings() {
+  const logo = settings.brandLogo || '开';
+  const title = settings.brandTitle || '开开的博士成长计划';
+  const subtitle = settings.brandSubtitle || '计划 · 项目 · 复盘 · 云同步';
+  $('brandLogo').textContent = logo;
+  $('brandTitle').textContent = title;
+  $('brandSubtitle').textContent = subtitle;
+  document.title = title;
+  $('brandLogoInput').value = logo;
+  $('brandTitleInput').value = title;
+  $('brandSubtitleInput').value = subtitle;
+}
+function saveBrandSettings() {
+  settings.brandLogo = $('brandLogoInput').value.trim() || '开';
+  settings.brandTitle = $('brandTitleInput').value.trim() || '开开的博士成长计划';
+  settings.brandSubtitle = $('brandSubtitleInput').value.trim() || '计划 · 项目 · 复盘 · 云同步';
+  localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+  applyBrandSettings();
+  toast('头像和标题已更新');
 }
 function addDaysKey(key, days) {
   const date = parseDateKey(key);
@@ -1070,15 +1153,17 @@ function loadArchiveDate() {
   const dateKey = selectedArchiveDate();
   loadArchive(dateKey);
 }
-function aiReviewPeriodDays() { return Number($('aiPeriodInput')?.value || 7); }
-function aiReviewPeriodLabel(days = aiReviewPeriodDays()) { return days === 30 ? '月报' : '周报'; }
-function aiReviewKey(days = aiReviewPeriodDays()) { return `${TODAY}-${days === 30 ? 'month' : 'week'}`; }
-function saveAiReviewArchive(text, days = aiReviewPeriodDays()) {
+function aiMode() { return $('aiModeInput')?.value || 'weekly'; }
+function aiUserRequest() { return $('aiRequestInput')?.value.trim() || ''; }
+function aiReviewLabel(mode = aiMode()) { return mode === 'custom' ? '自定义处理' : '每周总结'; }
+function aiReviewKey(mode = aiMode()) { return `${TODAY}-${mode}`; }
+function saveAiReviewArchive(text, mode = aiMode()) {
   if (!state.aiReviews) state.aiReviews = {};
-  const label = aiReviewPeriodLabel(days);
-  state.aiReviews[aiReviewKey(days)] = {
+  const label = aiReviewLabel(mode);
+  state.aiReviews[aiReviewKey(mode)] = {
     date: TODAY,
-    periodDays: days,
+    mode,
+    request: aiUserRequest(),
     title: `${TODAY} AI ${label}`,
     text,
     savedAt: new Date().toISOString()
@@ -1091,18 +1176,24 @@ function renderAiArchive() {
   const entries = Object.entries(state.aiReviews || {}).sort((a, b) => (b[1].savedAt || '').localeCompare(a[1].savedAt || ''));
   node.innerHTML = entries.length ? entries.map(([key, item]) => `
     <div class="task-item">
-      <div><b>${escapeHtml(item.title || key)}</b><div class="meta">更新：${formatTime(item.savedAt)}</div></div>
+      <div>
+        <b>${escapeHtml(item.title || key)}</b>
+        <div class="meta">${escapeHtml(aiReviewLabel(item.mode || 'weekly'))}${item.request ? ` · 需求：${escapeHtml(item.request).slice(0, 48)}` : ''} · 更新：${formatTime(item.savedAt)}</div>
+      </div>
       <div class="task-actions">
         <button class="ghost" onclick="loadAiReviewArchive('${key}')">查看</button>
         <button class="danger" onclick="deleteAiReviewArchive('${key}')">删除</button>
       </div>
     </div>
-  `).join('') : '<p class="sub">还没有 AI 复盘档案。AI 生成周报/月报后会自动保存；同一天同周期重复生成会覆盖更新。</p>';
+  `).join('') : '<p class="sub">还没有 AI 复盘档案。每周总结或自定义处理后会自动保存；同一天同模式重复生成会覆盖更新。</p>';
 }
 function loadAiReviewArchive(key) {
   const item = state.aiReviews?.[key];
   if (!item) return;
+  $('aiModeInput').value = item.mode || 'weekly';
+  $('aiRequestInput').value = item.request || '';
   $('aiReviewText').value = item.text || '';
+  updateAiPreview(item.text || '');
   $('aiStatusInput').value = `已读取归档 · ${formatTime(item.savedAt)}`;
   showView('report');
 }
@@ -1112,61 +1203,35 @@ function deleteAiReviewArchive(key) {
   if (!confirm(`确认删除「${item.title || key}」？删除后无法恢复。`)) return;
   delete state.aiReviews[key];
   $('aiReviewText').value = '';
+  updateAiPreview('');
   $('aiStatusInput').value = '已删除 AI 复盘归档';
   saveLocal();
   toast('AI 复盘归档已删除');
 }
-function generateReport(days) {
-  const end = new Date();
-  const start = new Date();
-  start.setDate(end.getDate() - days + 1);
-  const startKey = toDateKey(start);
-  const done = state.tasks.filter(task => task.completedDate && task.completedDate >= startKey && task.completedDate <= TODAY);
-  const left = state.tasks.filter(task => !task.done);
-  const focusTotal = (state.focusSessions || []).filter(session => session.date >= startKey && session.date <= TODAY).reduce((sum, session) => sum + Number(session.minutes || 0), 0);
-  const focusTop = (state.focusSessions || []).filter(session => session.date >= startKey && session.date <= TODAY).reduce((acc, session) => {
-    acc[session.topic] = (acc[session.topic] || 0) + Number(session.minutes || 0);
-    return acc;
-  }, {});
-  const focusLines = Object.entries(focusTop).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([topic, minutes], index) => `${index + 1}. ${topic}：${minutes} 分钟`);
-  const projectsText = projectSummary();
-  $('reportText').value = `【开开的博士成长${days === 7 ? '周报' : '月报'}】
-周期：${startKey} 至 ${TODAY}
-
-一、项目进度
-${projectsText}
-
-二、完成概况
-完成 ${done.length} 项；专注 ${focusTotal} 分钟。
-
-三、专注投入
-${focusLines.length ? focusLines.join('\n') : '暂无专注记录'}
-
-四、代表性完成
-${done.length ? done.map((task, index) => `${index + 1}. ${task.text}（${task.type}，布置：${formatTime(task.assignedAt)}，完成：${formatTime(task.completedAt)}）`).join('\n') : '暂无完成记录'}
-
-五、遗留任务
-${left.length ? left.slice(0, 10).map((task, index) => `${index + 1}. ${task.text}（${priorityLabel[task.priority] || task.priority}，计划：${task.dueDate || ''}，布置：${formatTime(task.assignedAt)}，叠加 ${task.carryCount || 0} 天）`).join('\n') : '暂无遗留任务'}
-
-六、下阶段建议
-1. 每天只保留 1 个主线任务 + 2 个辅助任务。
-2. 把高频卡点沉淀成固定流程。
-3. 周末用 20 分钟回看成长档案。`;
-  showView('report');
+function copyAiReview() {
+  const text = $('aiReviewText').value.trim();
+  if (!text) return toast('先生成或读取一份 AI 输出');
+  if (!navigator.clipboard) {
+    $('aiReviewText').select();
+    document.execCommand('copy');
+    return toast('AI 输出已复制');
+  }
+  navigator.clipboard.writeText(text).then(() => toast('AI 输出已复制')).catch(() => toast('复制失败，请手动全选复制'));
 }
-
-function buildAiReviewData(days = aiReviewPeriodDays()) {
+function buildAiReviewData(mode = aiMode()) {
+  const days = 7;
   const end = new Date();
   const start = new Date();
   start.setDate(end.getDate() - days + 1);
   const startKey = toDateKey(start);
-  const periodLabel = aiReviewPeriodLabel(days);
+  const request = aiUserRequest();
   const monthStart = `${TODAY.slice(0, 8)}01`;
   const recentDaily = Object.keys(state.daily || {}).sort().reverse().slice(0, 14).map(key => ({ date: key, ...state.daily[key] }));
   const recentTasks = state.tasks.slice(0, 80).map(task => ({ text: task.text, type: task.type, priority: priorityLabel[task.priority] || task.priority, done: task.done, dueDate: task.dueDate, completedDate: task.completedDate, carryCount: task.carryCount || 0 }));
   return {
     today: TODAY,
-    period: { type: periodLabel, days, startDate: startKey, endDate: TODAY, outputStyle: 'plain_text_no_markdown' },
+    period: { type: mode === 'custom' ? '自定义需求' : '每周总结', days, startDate: startKey, endDate: TODAY, outputStyle: 'markdown_reading_view' },
+    userRequest: request,
     projects: state.projects || [],
     tasks: recentTasks,
     focusSessions: (state.focusSessions || []).filter(session => session.date >= monthStart).slice(0, 80),
@@ -1244,10 +1309,10 @@ async function loadAiSettings(options = {}) {
   if (!options.silent) toast('已读取账号 AI 配置');
   return true;
 }
-async function callAiBackend(mode, days = aiReviewPeriodDays()) {
+async function callAiBackend(mode, reviewMode = aiMode()) {
   if (!await ensureAiAccountReady()) return null;
   rememberAiForm();
-  const { data, error } = await supabaseClient.functions.invoke(aiFunctionName(), { body: { mode, periodDays: days, periodLabel: aiReviewPeriodLabel(days), reviewData: mode === 'review' ? buildAiReviewData(days) : undefined } });
+  const { data, error } = await supabaseClient.functions.invoke(aiFunctionName(), { body: { mode, reviewMode, userRequest: aiUserRequest(), reviewData: mode === 'review' ? buildAiReviewData(reviewMode) : undefined } });
   if (error) throw new Error(error.message || '后端函数调用失败');
   if (data?.error) throw new Error(data.error);
   return data;
@@ -1267,22 +1332,25 @@ async function generateAiReview() {
   const button = $('aiReviewBtn');
   try {
     button.disabled = true;
-    const days = aiReviewPeriodDays();
-    const label = aiReviewPeriodLabel(days);
-    button.textContent = `AI 生成${label}中...`;
-    const data = await callAiBackend('review', days);
+    const mode = aiMode();
+    const label = aiReviewLabel(mode);
+    if (mode === 'custom' && !aiUserRequest()) { toast('先写下你想让 AI 做什么'); return; }
+    button.textContent = `AI ${label}中...`;
+    const data = await callAiBackend('review', mode);
     const text = data?.text || 'AI 没有返回文本';
     $('aiReviewText').value = text;
+    updateAiPreview(text);
     $('aiStatusInput').value = `${label}已生成并归档 · ${formatTime(new Date().toISOString())}`;
-    saveAiReviewArchive(text, days);
+    saveAiReviewArchive(text, mode);
     toast(`AI ${label}已生成并归档`);
   } catch (error) {
     $('aiReviewText').value = `AI 复盘失败：${error.message}`;
+    updateAiPreview($('aiReviewText').value);
     $('aiStatusInput').value = `复盘失败：${error.message}`;
     toast(`AI 复盘失败：${error.message}`);
   } finally {
     button.disabled = false;
-    button.textContent = 'AI 生成并归档';
+    button.textContent = 'AI 处理并归档';
   }
 }
 
@@ -1354,7 +1422,7 @@ function exportAll() {
     '## 成长档案',
     ...Object.keys(state.archive || {}).sort().map(key => `### ${key}\n${state.archive[key].text || ''}`),
     '',
-    '## AI 周报月报档案',
+    '## AI 总结档案',
     ...Object.keys(state.aiReviews || {}).sort().map(key => `### ${state.aiReviews[key].title || key}\n${state.aiReviews[key].text || ''}`)
   ];
   const blob = new Blob([lines.join('\n')], { type: 'text/markdown;charset=utf-8' });
@@ -1514,6 +1582,7 @@ function bindEvents() {
   document.querySelectorAll('.nav button').forEach(btn => btn.addEventListener('click', () => showView(btn.dataset.view)));
   $('saveDailyBtn').addEventListener('click', saveDaily);
   $('themeInput').addEventListener('change', () => { settings.theme = $('themeInput').value; localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); applyDailyTheme(); toast('主题颜色已更新'); });
+  ['brandLogoInput', 'brandTitleInput', 'brandSubtitleInput'].forEach(id => $(id).addEventListener('change', saveBrandSettings));
   $('saveProjectBtn').addEventListener('click', saveProject);
   $('resetProjectBtn').addEventListener('click', resetProjectForm);
   $('generateReviewBtn').addEventListener('click', () => generateReview());
@@ -1524,9 +1593,9 @@ function bindEvents() {
   $('loadAiSettingsBtn').addEventListener('click', () => loadAiSettings());
   $('testAiBackendBtn').addEventListener('click', testAiBackend);
   $('aiReviewBtn').addEventListener('click', generateAiReview);
-  $('weekReportBtn').addEventListener('click', () => generateReport(7));
-  $('monthReportBtn').addEventListener('click', () => generateReport(30));
-  $('copyReportBtn').addEventListener('click', copyReport);
+  $('copyAiReviewBtn').addEventListener('click', copyAiReview);
+  $('aiReviewText').addEventListener('input', () => updateAiPreview());
+  $('aiModeInput').addEventListener('change', () => { $('aiStatusInput').value = aiMode() === 'custom' ? '自定义模式：请填写需求' : '每周总结模式：自动汇总最近 7 天'; });
   ['searchInput', 'filterTypeInput', 'scopeInput'].forEach(id => {
     $(id).addEventListener('input', renderTasks);
     $(id).addEventListener('change', renderTasks);
@@ -1563,8 +1632,10 @@ async function init() {
   $('supabaseUrlInput').value = settings.url || '';
   $('supabaseAnonInput').value = settings.anon || '';
   $('emailInput').value = settings.email || '';
+  applyBrandSettings();
   fillAiForm({ status: '等待登录后读取账号配置' });
-  $('aiPeriodInput').value = '7';
+  $('aiModeInput').value = 'weekly';
+  updateAiPreview();
   $('themeInput').value = settings.theme || 'auto';
   $('dueDateInput').value = TODAY;
   $('archiveDateInput').value = TODAY;
