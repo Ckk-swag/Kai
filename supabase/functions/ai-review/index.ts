@@ -39,26 +39,39 @@ Deno.serve(async (req) => {
     if (!settings?.api_key) throw new Error('当前账号还没有保存 AI API Key');
 
     const body = await req.json().catch(() => ({}));
+    const effectiveSettings = { ...settings, model: normalizeModel(body.aiModel || settings.model) };
     if (body.mode === 'test') {
-      return json({ ok: true, provider: settings.provider, model: settings.model, message: '后端函数和账号 AI 配置可用' });
+      return json({ ok: true, provider: effectiveSettings.provider, model: effectiveSettings.model, message: '后端函数和账号 AI 配置可用' });
     }
     if (body.mode !== 'review') throw new Error('未知 AI 操作');
 
     const reviewMode = body.reviewMode === 'custom' ? 'custom' : 'weekly';
-    const userRequest = String(body.userRequest || '').slice(0, 2000);
-    const text = await requestAiReview(settings, body.reviewData, reviewMode, userRequest);
-    return json({ ok: true, provider: settings.provider, model: settings.model, text });
+    const userRequest = String(body.userRequest || body.reviewData?.userRequest || '').slice(0, 4000);
+    const text = await requestAiReview(effectiveSettings, body.reviewData, reviewMode, userRequest);
+    return json({ ok: true, provider: effectiveSettings.provider, model: effectiveSettings.model, text });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     return json({ ok: false, error: message }, 400);
   }
 });
 
+function normalizeModel(model: unknown) {
+  const value = String(model || '').trim();
+  if (!value) return 'deepseek-v4-flash';
+  const aliases: Record<string, string> = {
+    'DeepSeek V4 Flash': 'deepseek-v4-flash',
+    'DeepSeek V4 Pro': 'deepseek-v4-pro',
+    flash: 'deepseek-v4-flash',
+    pro: 'deepseek-v4-pro',
+  };
+  return aliases[value] || value;
+}
+
 async function requestAiReview(settings: AiSettings, reviewData: unknown, reviewMode: 'weekly' | 'custom', userRequest: string) {
   const baseUrl = (settings.api_base_url || 'https://api.deepseek.com').replace(/\/$/, '');
   const endpoint = `${baseUrl}/chat/completions`;
   const prompt = reviewMode === 'custom'
-    ? `请按用户的自定义需求处理这些成长数据。用户需求：${userRequest || '请给出可执行建议'}。数据：${JSON.stringify(reviewData)}`
+    ? `用户正在自定义提问。请把“用户需求”作为最高优先级，直接回答这个问题或完成这个任务；不要套用周报模板，不要忽略用户需求。若数据不足，请先说明缺口，再基于已有任务、项目、专注和打卡数据给出尽量具体的结论和下一步。用户需求：${userRequest || '请给出可执行建议'}。可用成长数据：${JSON.stringify(reviewData)}`
     : `请总结最近一周内容，输出：本周概览、完成与专注、项目进展、主要卡点、下周三项行动、具体鼓励。数据：${JSON.stringify(reviewData)}`;
   const res = await fetch(endpoint, {
     method: 'POST',
@@ -69,10 +82,10 @@ async function requestAiReview(settings: AiSettings, reviewData: unknown, review
     body: JSON.stringify({
       model: settings.model || 'deepseek-v4-flash',
       messages: [
-        { role: 'system', content: '你是一个温柔但具体的博士成长教练。请基于用户提供的结构化数据，用中文输出。结构要清晰，便于前端渲染成阅读版；不要输出 # 字符作为标题。' },
+        { role: 'system', content: '你是一个温柔但具体的博士成长教练。必须优先执行用户的自定义需求；只有在没有自定义需求时才生成周总结。请基于用户提供的结构化数据，用中文输出。结构要清晰，便于前端渲染成阅读版；不要输出 # 字符作为标题。' },
         { role: 'user', content: prompt },
       ],
-      temperature: 0.7,
+      temperature: reviewMode === 'custom' ? 0.35 : 0.7,
     }),
   });
   const data = await res.json().catch(() => ({}));

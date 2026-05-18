@@ -67,8 +67,6 @@
     .status.warn { background: var(--danger-bg); color: var(--danger); }
     .nav { display: grid; gap: 8px; }
     .side-actions { display: grid; gap: 14px; }
-    .mobile-actions { display: none; }
-    .mobile-action-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(92px,1fr)); gap: 8px; margin-top: 10px; }
     .brand-editor { margin-top: 10px; }
     .brand-editor summary { cursor: pointer; font-weight: 900; color: var(--theme-contrast); list-style: none; }
     .brand-editor summary::-webkit-details-marker { display: none; }
@@ -179,9 +177,6 @@
       .nav button b { font-size: 11px; }
       .desktop-tab { display: none !important; }
       .side-actions { display: none; }
-      .mobile-actions { display: block; margin: 18px 0 118px; padding: 12px; border: 1px solid var(--line); border-radius: 22px; background: rgba(255,255,255,.72); box-shadow: var(--shadow); }
-      .mobile-actions summary { cursor: pointer; font-weight: 900; color: var(--theme-contrast); }
-      .mobile-actions button { padding: 10px 8px; border-radius: 14px; }
       .main { padding: 18px; }
       .hero h2 { font-size: 32px; }
       .task-item { grid-template-columns: auto 1fr; }
@@ -409,15 +404,6 @@
       </div>
     </section>
 
-    <details class="mobile-actions">
-      <summary>云端 / 导出工具</summary>
-      <div class="mobile-action-grid">
-        <button id="cloudMobileBtn" class="ghost">账号同步</button>
-        <button id="pushMobileBtn" class="ghost">推送云端</button>
-        <button id="pullMobileBtn" class="ghost">拉取云端</button>
-        <button id="exportMobileBtn" class="ghost">导出全部</button>
-      </div>
-    </details>
   </main>
   <div class="mobile-actions">
     <button id="pushMobileBtn" class="ghost">推送云端</button>
@@ -1001,9 +987,35 @@ function renderFocusLog() {
   $('focusTodayCount').textContent = `${todayMinutes}m`;
   $('focusNavCount').textContent = `${todayMinutes}m`;
   renderFocusPie(sessions);
-  $('focusLogList').innerHTML = sessions.length ? sessions.slice(0, 5).map(session => `
-    <div class="focus-row"><b>${escapeHtml(session.topic)}</b><div class="meta">${session.minutes} 分钟 · ${formatTime(session.startedAt)}${session.source === 'timer' ? ' · 自动记录' : ''}</div></div>
+  $('focusLogList').innerHTML = sessions.length ? sessions.slice(0, 20).map(session => `
+    <div class="focus-row">
+      <b>${escapeHtml(session.topic)}</b>
+      <div class="meta">${session.minutes} 分钟 · ${formatTime(session.startedAt)}${session.source === 'timer' ? ' · 自动记录' : ''}</div>
+      <div class="quick" style="margin:8px 0 0">
+        <button class="ghost" onclick="editFocusSession('${session.id}')">改名称</button>
+        <button class="danger" onclick="deleteFocusSession('${session.id}')">删除</button>
+      </div>
+    </div>
   `).join('') : '<p class="sub">今天还没有专注记录。完成一轮或点击“记录本轮”后会显示在这里。</p>';
+}
+function editFocusSession(id) {
+  const session = (state.focusSessions || []).find(item => item.id === id);
+  if (!session) return;
+  const nextTopic = prompt('修改专注名称', session.topic || '');
+  if (nextTopic === null) return;
+  const topic = nextTopic.trim();
+  if (!topic) return toast('专注名称不能为空');
+  session.topic = topic;
+  saveLocal();
+  toast('专注名称已修改');
+}
+function deleteFocusSession(id) {
+  const session = (state.focusSessions || []).find(item => item.id === id);
+  if (!session) return;
+  if (!confirm(`删除这条专注记录？\n${session.topic} · ${session.minutes} 分钟`)) return;
+  state.focusSessions = (state.focusSessions || []).filter(item => item.id !== id);
+  saveLocal();
+  toast('专注记录已删除');
 }
 
 function saveDaily() {
@@ -1205,9 +1217,10 @@ function loadArchiveDate() {
 }
 function aiMode() { return $('aiModeInput')?.value || 'weekly'; }
 function aiUserRequest() { return $('aiRequestInput')?.value.trim() || ''; }
-function aiReviewLabel(mode = aiMode()) { return mode === 'custom' ? '自定义处理' : '每周总结'; }
-function aiReviewKey(mode = aiMode()) { return `${TODAY}-${mode}`; }
-function saveAiReviewArchive(text, mode = aiMode()) {
+function effectiveAiMode() { return aiUserRequest() ? 'custom' : aiMode(); }
+function aiReviewLabel(mode = effectiveAiMode()) { return mode === 'custom' ? '自定义处理' : '每周总结'; }
+function aiReviewKey(mode = effectiveAiMode()) { return `${TODAY}-${mode}`; }
+function saveAiReviewArchive(text, mode = effectiveAiMode()) {
   if (!state.aiReviews) state.aiReviews = {};
   const label = aiReviewLabel(mode);
   state.aiReviews[aiReviewKey(mode)] = {
@@ -1272,7 +1285,7 @@ function copyAiReview() {
   }
   navigator.clipboard.writeText(text).then(() => toast('阅读版已复制')).catch(() => toast('复制失败，请手动选择阅读版文本'));
 }
-function buildAiReviewData(mode = aiMode()) {
+function buildAiReviewData(mode = effectiveAiMode()) {
   const days = 7;
   const end = new Date();
   const start = new Date();
@@ -1315,7 +1328,10 @@ function fillAiForm(config = {}) {
   $('aiFunctionInput').value = config.functionName || settings.aiFunction || 'ai-review';
   $('aiProviderInput').value = config.provider || settings.aiProvider || 'deepseek';
   $('aiBaseUrlInput').value = config.apiBaseUrl || settings.aiBaseUrl || 'https://api.deepseek.com';
-  $('aiModelInput').value = config.model || settings.aiModel || 'deepseek-v4-flash';
+  const model = config.model || settings.aiModel || 'deepseek-v4-flash';
+  const modelInput = $('aiModelInput');
+  if (![...modelInput.options].some(option => option.value === model)) modelInput.add(new Option(model, model));
+  modelInput.value = model;
   if (config.apiKey !== undefined) $('aiKeyInput').value = config.apiKey || '';
   $('aiStatusInput').value = config.status || '';
 }
@@ -1363,10 +1379,10 @@ async function loadAiSettings(options = {}) {
   if (!options.silent) toast('已读取账号 AI 配置');
   return true;
 }
-async function callAiBackend(mode, reviewMode = aiMode()) {
+async function callAiBackend(mode, reviewMode = effectiveAiMode()) {
   if (!await ensureAiAccountReady()) return null;
   rememberAiForm();
-  const { data, error } = await supabaseClient.functions.invoke(aiFunctionName(), { body: { mode, reviewMode, userRequest: aiUserRequest(), reviewData: mode === 'review' ? buildAiReviewData(reviewMode) : undefined } });
+  const { data, error } = await supabaseClient.functions.invoke(aiFunctionName(), { body: { mode, reviewMode, userRequest: aiUserRequest(), aiModel: readAiForm().model, reviewData: mode === 'review' ? buildAiReviewData(reviewMode) : undefined } });
   if (error) throw new Error(error.message || '后端函数调用失败');
   if (data?.error) throw new Error(data.error);
   return data;
@@ -1386,9 +1402,9 @@ async function generateAiReview() {
   const button = $('aiReviewBtn');
   try {
     button.disabled = true;
-    const mode = aiMode();
+    const mode = effectiveAiMode();
     const label = aiReviewLabel(mode);
-    if (mode === 'custom' && !aiUserRequest()) { toast('先写下你想让 AI 做什么'); return; }
+    if (aiMode() === 'custom' && !aiUserRequest()) { toast('先写下你想让 AI 做什么'); return; }
     button.textContent = `AI ${label}中...`;
     const data = await callAiBackend('review', mode);
     const text = data?.text || 'AI 没有返回文本';
@@ -1682,10 +1698,6 @@ function bindEvents() {
   $('pullCloudBtn').addEventListener('click', pullCloud);
   $('pushSideBtn').addEventListener('click', pushCloud);
   $('pullSideBtn').addEventListener('click', pullCloud);
-  $('cloudMobileBtn').addEventListener('click', () => showView('cloud'));
-  $('pushMobileBtn').addEventListener('click', pushCloud);
-  $('pullMobileBtn').addEventListener('click', pullCloud);
-  $('exportMobileBtn').addEventListener('click', exportAll);
   $('startTimerBtn').addEventListener('click', startTimer);
   $('pauseTimerBtn').addEventListener('click', pauseTimer);
   $('resetTimerBtn').addEventListener('click', resetTimer);
