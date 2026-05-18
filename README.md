@@ -7,7 +7,7 @@
 2. 在 Supabase 创建项目。
 3. 在 SQL Editor 运行仓库根目录的 `schema.sql`。
 4. 如需 AI 复盘，部署 `supabase/functions/ai-review` Edge Function。
-5. 在网页“云同步”里填写 Project URL、anon public key、邮箱、密码。
+5. 在网页“账号与云同步”里只填写邮箱和密码。
 6. 注册/登录后会自动读取云端最新内容；之后每次保存、完成、删除、顺延或归档都会自动推送云端。
 
 ## 新增实用功能
@@ -25,13 +25,13 @@
 - 手动周报/月报按钮已移除，可直接让 AI 总结最近一周或按自定义需求处理并存档。
 - 任务完成时会弹出鼓励动画并播放轻量提示音，让完成动作更有反馈。
 - AI 总结页默认总结最近一周，也支持输入自定义需求；前端只请求自己的 Supabase Edge Function，DeepSeek / OpenAI 兼容接口由后端函数代调用，并提供后端测试通道。
-- AI 供应商、Base URL、模型和 API Key 可保存到当前 Supabase 账号，换设备登录后可读取；AI 输出会保存原文并渲染为阅读版，支持一键复制，按日期和模式自动归档，同一天同模式重复生成会覆盖更新，并支持读取、确认删除。
-- 手机端把今日计划、项目进度、复盘归档、AI总结和云同步入口固定在屏幕底栏；云端/导出工具收进移动端折叠入口，避免为了操作一直下拉。
+- AI 供应商、Base URL、模型和 API Key 可保存到当前 Supabase 账号，换设备登录后可读取；页面只保留阅读版展示，支持一键复制阅读版，按日期和模式自动归档，同一天同模式重复生成会覆盖更新，并支持读取、确认删除。
+- 手机端把今日计划、项目进度、复盘归档、AI总结和云同步入口固定在屏幕底栏，不会随页面滚动；云端/导出工具收进移动端折叠入口，避免为了操作一直下拉。
 - 登录 Supabase 后自动推送本地改动，换设备刷新网页会自动读取云端最新内容。
 
 ## 注意
 - 不需要 Render。
 - 不需要 server.js。
 - 不要把 service_role key 填进前端；AI API Key 也不要硬编码进前端代码。
-- anon public key 可以放前端，但必须配合 RLS；schema.sql 已经配置 RLS。
+- Project URL 和 anon public key 已内置为统一 Supabase 项目，用户界面不再要求填写；anon public key 必须配合 RLS，schema.sql 已经配置 RLS。
 - AI 复盘请通过 `supabase/functions/ai-review` 调后端，不要让浏览器直接请求 DeepSeek。

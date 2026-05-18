@@ -69,6 +69,9 @@
     .side-actions { display: grid; gap: 14px; }
     .mobile-actions { display: none; }
     .mobile-action-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-top: 10px; }
+    .brand-editor { margin-top: 10px; }
+    .brand-editor summary { cursor: pointer; font-weight: 900; color: var(--theme-contrast); list-style: none; }
+    .brand-editor summary::-webkit-details-marker { display: none; }
     .markdown-preview { margin-top: 12px; padding: 16px; min-height: 220px; border: 1px solid var(--line); border-radius: 18px; background: #fff; line-height: 1.8; white-space: normal; }
     .markdown-preview h2, .markdown-preview h3, .markdown-preview h4 { margin: 16px 0 8px; color: var(--theme-contrast); }
     .markdown-preview h2 { font-size: 22px; }
@@ -163,11 +166,11 @@
     @keyframes confetti { 0% { transform: translate(0,0) rotate(0deg); opacity: 1; } 100% { transform: translate(var(--dx),var(--dy)) rotate(520deg); opacity: 0; } }
     @media(max-width: 900px) {
       .app, .hero, .view-grid, .row-task, .row-2, .row-3, .settings, .kpis, .toolbar, .mini-grid { grid-template-columns: 1fr; }
-      body { padding-bottom: 88px; }
-      .side { position: relative; height: auto; padding-bottom: 12px; }
-      .side > .nav { position: fixed; left: 10px; right: 10px; bottom: 10px; z-index: 30; grid-template-columns: repeat(5,1fr); gap: 6px; padding: 8px; border: 1px solid var(--line); border-radius: 22px; background: rgba(255,255,255,.92); box-shadow: var(--shadow); backdrop-filter: blur(16px); }
-      .side > .nav button { justify-content: center; text-align: center; flex-direction: column; gap: 2px; padding: 8px 4px; border-radius: 15px; font-size: 12px; line-height: 1.2; min-height: 54px; }
-      .side > .nav button b { font-size: 11px; }
+      body { padding-bottom: calc(112px + env(safe-area-inset-bottom)); }
+      .side { position: static; height: auto; padding-bottom: 12px; }
+      .nav { position: fixed; left: 10px; right: 10px; bottom: max(10px, env(safe-area-inset-bottom)); top: auto; z-index: 1000; grid-template-columns: repeat(5,1fr); gap: 6px; padding: 8px; border: 1px solid var(--line); border-radius: 22px; background: rgba(255,255,255,.94); box-shadow: var(--shadow); backdrop-filter: blur(16px); transform: translateZ(0); }
+      .nav button { justify-content: center; text-align: center; flex-direction: column; gap: 2px; padding: 8px 4px; border-radius: 15px; font-size: 12px; line-height: 1.2; min-height: 54px; }
+      .nav button b { font-size: 11px; }
       .side-actions { display: none; }
       .mobile-actions { display: block; margin: 0 18px 12px; padding: 12px; border: 1px solid var(--line); border-radius: 22px; background: rgba(255,255,255,.72); box-shadow: var(--shadow); }
       .mobile-actions summary { cursor: pointer; font-weight: 900; color: var(--theme-contrast); }
@@ -192,8 +195,11 @@
       <p id="quoteText" class="quote">博士成长不是冲刺，是每天可追踪的一点点推进。</p>
       <span id="syncStatus" class="status">本地模式</span>
       <label class="field"><span>主题颜色</span><select id="themeInput" class="theme-select"><option value="auto">每日自动</option><option value="orange">奶油橙</option><option value="pink">樱花粉</option><option value="purple">葡萄紫</option><option value="blue">晴空蓝</option><option value="cyan">海盐青</option><option value="green">抹茶绿</option><option value="yellow">香草黄</option></select></label>
-      <div class="row-2" style="margin-top:10px"><label class="field"><span>头像</span><input id="brandLogoInput" maxlength="4" placeholder="开 / 🌱" /></label><label class="field"><span>标题</span><input id="brandTitleInput" placeholder="开开的博士成长计划" /></label></div>
-      <label class="field" style="margin-top:10px"><span>副标题</span><input id="brandSubtitleInput" placeholder="计划 · 项目 · 复盘 · 云同步" /></label>
+      <details class="brand-editor">
+        <summary>修改头像和标题</summary>
+        <div class="row-2" style="margin-top:10px"><label class="field"><span>头像</span><input id="brandLogoInput" maxlength="4" placeholder="开 / 🌱" /></label><label class="field"><span>标题</span><input id="brandTitleInput" placeholder="开开的博士成长计划" /></label></div>
+        <label class="field" style="margin-top:10px"><span>副标题</span><input id="brandSubtitleInput" placeholder="计划 · 项目 · 复盘 · 云同步" /></label>
+      </details>
     </div>
     <div class="nav">
       <button class="on" data-view="today">今日计划 <b id="countToday">0</b></button>
@@ -358,7 +364,7 @@
       <p class="sub">手动周报/月报按钮已移除；现在由 AI 根据每周数据生成总结，或者按你输入的需求处理当前数据并归档。</p>
       <div class="ai-panel">
         <h3>AI 总结与处理</h3>
-        <p class="sub">前端只调用你自己的 Supabase Edge Function。默认总结最近 7 天内容；也可以选择“自定义需求”，直接告诉 AI 你想让它做什么。输出会同时保存原文，并渲染成可阅读版本。</p>
+        <p class="sub">前端只调用你自己的 Supabase Edge Function。默认总结最近 7 天内容；也可以选择“自定义需求”，直接告诉 AI 你想让它做什么。页面只展示阅读版，不再显示带 # 的原始输出。</p>
         <div class="notice"><b>部署提示：</b>先运行 `schema.sql`，再部署 `supabase/functions/ai-review`。可先点“测试后端通道”确认函数和账号配置可用。</div>
         <div class="settings">
           <label class="field"><span>后端函数名</span><input id="aiFunctionInput" placeholder="ai-review" /></label>
@@ -375,9 +381,9 @@
           <button id="loadAiSettingsBtn" class="ghost">读取账号配置</button>
           <button id="testAiBackendBtn" class="ghost">测试后端通道</button>
           <button id="aiReviewBtn" class="primary">AI 处理并归档</button>
-          <button id="copyAiReviewBtn" class="ghost">复制 AI 输出</button>
+          <button id="copyAiReviewBtn" class="ghost">复制阅读版</button>
         </div>
-        <textarea id="aiReviewText" class="ai-review-output" style="margin-top:12px" placeholder="AI 原始输出会显示在这里，并自动归档到下方。"></textarea>
+        <textarea id="aiReviewText" class="hidden" aria-hidden="true"></textarea>
         <h3>阅读版</h3>
         <div id="aiReviewPreview" class="markdown-preview"><p class="sub">AI 输出会在这里渲染为阅读版。</p></div>
         <h3>AI 复盘档案</h3>
@@ -386,18 +392,18 @@
     </section>
 
     <section id="view-cloud" class="view card hidden">
-      <h2>Supabase 云同步</h2>
-      <div class="notice"><b>只填写 Project URL 和 anon public key，不要填 service_role key。</b><br>登录后会开启自动同步：每次保存、完成、删除、顺延或归档都会自动推送云端；换设备打开网页会自动读取云端最新内容。</div>
+      <h2>账号与云同步</h2>
+      <p class="sub">数据库已统一绑定到内置 Supabase 项目。只需要邮箱和密码注册或登录，登录后会自动同步。</p>
       <div class="settings">
-        <input id="supabaseUrlInput" placeholder="Supabase Project URL" />
-        <input id="supabaseAnonInput" placeholder="Supabase anon public key" />
         <input id="emailInput" placeholder="邮箱" />
         <input id="passwordInput" type="password" placeholder="密码，至少6位" />
+        <input id="newPasswordInput" type="password" placeholder="新密码（用于修改密码）" />
       </div>
       <div class="quick">
-        <button id="testConfigBtn" class="ghost">测试配置</button>
         <button id="signupBtn" class="ghost">注册</button>
         <button id="loginBtn" class="primary">登录</button>
+        <button id="resetPasswordBtn" class="ghost">忘记密码</button>
+        <button id="updatePasswordBtn" class="ghost">修改密码</button>
         <button id="pushCloudBtn" class="ghost">推送云端</button>
         <button id="pullCloudBtn" class="ghost">拉取云端</button>
         <button id="logoutBtn" class="danger">退出</button>
@@ -416,6 +422,8 @@
 <script>
 const STORAGE_KEY = 'kaikai_growth_32';
 const SETTINGS_KEY = 'kaikai_growth_32_settings';
+const SUPABASE_URL = 'https://ncxxtrnmpbnbtzdtdvin.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5jeHh0cm5tcGJuYnR6ZHRkdmluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg4OTA0NDIsImV4cCI6MjA5NDQ2NjQ0Mn0.M58xkngMoiQHWH9Rc3X7Bv8J8xftVWncRNjcgqi941I';
 const TODAY = toDateKey(new Date());
 const priorityLabel = { today: '今天必须动', week: '本周推进', low: '有空再说' };
 const moodLabel = { 稳定: '😌 稳定', 平静: '🌿 平静', 高效: '🔥 高效', 开心: '😊 开心', 焦虑: '😵‍💫 焦虑', 紧张: '⏳ 紧张', 卡住: '🧱 卡住', 疲惫: '😴 疲惫', 低落: '🌧️ 低落', 兴奋: '✨ 兴奋' };
@@ -536,8 +544,8 @@ function loadState() {
   catch { return { tasks: [], daily: {}, archive: {}, aiReviews: {}, thesis: {}, projects: [], focusSessions: [] }; }
 }
 function loadSettings() {
-  try { return Object.assign({ url: '', anon: '', email: '', theme: 'auto', brandLogo: '开', brandTitle: '开开的博士成长计划', brandSubtitle: '计划 · 项目 · 复盘 · 云同步', aiFunction: 'ai-review', aiProvider: 'deepseek', aiBaseUrl: 'https://api.deepseek.com', aiModel: 'deepseek-chat' }, JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}')); }
-  catch { return { url: '', anon: '', email: '', theme: 'auto', brandLogo: '开', brandTitle: '开开的博士成长计划', brandSubtitle: '计划 · 项目 · 复盘 · 云同步', aiFunction: 'ai-review', aiProvider: 'deepseek', aiBaseUrl: 'https://api.deepseek.com', aiModel: 'deepseek-chat' }; }
+  try { return Object.assign({ email: '', theme: 'auto', brandLogo: '开', brandTitle: '开开的博士成长计划', brandSubtitle: '计划 · 项目 · 复盘 · 云同步', aiFunction: 'ai-review', aiProvider: 'deepseek', aiBaseUrl: 'https://api.deepseek.com', aiModel: 'deepseek-chat' }, JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}')); }
+  catch { return { email: '', theme: 'auto', brandLogo: '开', brandTitle: '开开的博士成长计划', brandSubtitle: '计划 · 项目 · 复盘 · 云同步', aiFunction: 'ai-review', aiProvider: 'deepseek', aiBaseUrl: 'https://api.deepseek.com', aiModel: 'deepseek-chat' }; }
 }
 function toast(message) {
   const node = $('toast');
@@ -597,6 +605,11 @@ function updateAiPreview(text = $('aiReviewText')?.value || '') {
   const node = $('aiReviewPreview');
   if (node) node.innerHTML = renderMarkdown(text);
 }
+function readingTextFromMarkdown(text) {
+  const temp = document.createElement('div');
+  temp.innerHTML = renderMarkdown(text);
+  return (temp.innerText || temp.textContent || '').trim();
+}
 function applyBrandSettings() {
   const logo = settings.brandLogo || '开';
   const title = settings.brandTitle || '开开的博士成长计划';
@@ -647,7 +660,7 @@ function saveLocal() {
   scheduleAutoPush();
 }
 function scheduleAutoPush() {
-  if (!settings.url || !settings.anon) return;
+  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) return;
   clearTimeout(autoSyncTimer);
   autoSyncTimer = setTimeout(() => autoPushCloud(), 900);
 }
@@ -1209,14 +1222,18 @@ function deleteAiReviewArchive(key) {
   toast('AI 复盘归档已删除');
 }
 function copyAiReview() {
-  const text = $('aiReviewText').value.trim();
-  if (!text) return toast('先生成或读取一份 AI 输出');
+  const text = ($('aiReviewPreview')?.innerText || '').trim();
+  if (!text || text === 'AI 输出会在这里渲染为阅读版。') return toast('先生成或读取一份 AI 总结');
   if (!navigator.clipboard) {
-    $('aiReviewText').select();
+    const temp = document.createElement('textarea');
+    temp.value = text;
+    document.body.appendChild(temp);
+    temp.select();
     document.execCommand('copy');
-    return toast('AI 输出已复制');
+    temp.remove();
+    return toast('阅读版已复制');
   }
-  navigator.clipboard.writeText(text).then(() => toast('AI 输出已复制')).catch(() => toast('复制失败，请手动全选复制'));
+  navigator.clipboard.writeText(text).then(() => toast('阅读版已复制')).catch(() => toast('复制失败，请手动选择阅读版文本'));
 }
 function buildAiReviewData(mode = aiMode()) {
   const days = 7;
@@ -1230,7 +1247,7 @@ function buildAiReviewData(mode = aiMode()) {
   const recentTasks = state.tasks.slice(0, 80).map(task => ({ text: task.text, type: task.type, priority: priorityLabel[task.priority] || task.priority, done: task.done, dueDate: task.dueDate, completedDate: task.completedDate, carryCount: task.carryCount || 0 }));
   return {
     today: TODAY,
-    period: { type: mode === 'custom' ? '自定义需求' : '每周总结', days, startDate: startKey, endDate: TODAY, outputStyle: 'markdown_reading_view' },
+    period: { type: mode === 'custom' ? '自定义需求' : '每周总结', days, startDate: startKey, endDate: TODAY, outputStyle: 'reading_view_no_hash_headings' },
     userRequest: request,
     projects: state.projects || [],
     tasks: recentTasks,
@@ -1296,7 +1313,7 @@ async function saveAiSettings() {
   toast('AI 配置已保存到账号');
 }
 async function loadAiSettings(options = {}) {
-  if (!supabaseClient && settings.url && settings.anon && window.supabase) supabaseClient = window.supabase.createClient(settings.url, settings.anon);
+  if (!supabaseClient && window.supabase) supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   if (!supabaseClient) return false;
   await refreshUser();
   if (!currentUser) return false;
@@ -1338,10 +1355,11 @@ async function generateAiReview() {
     button.textContent = `AI ${label}中...`;
     const data = await callAiBackend('review', mode);
     const text = data?.text || 'AI 没有返回文本';
-    $('aiReviewText').value = text;
+    const readableText = readingTextFromMarkdown(text) || text;
+    $('aiReviewText').value = readableText;
     updateAiPreview(text);
     $('aiStatusInput').value = `${label}已生成并归档 · ${formatTime(new Date().toISOString())}`;
-    saveAiReviewArchive(text, mode);
+    saveAiReviewArchive(readableText, mode);
     toast(`AI ${label}已生成并归档`);
   } catch (error) {
     $('aiReviewText').value = `AI 复盘失败：${error.message}`;
@@ -1436,18 +1454,15 @@ function exportAll() {
   URL.revokeObjectURL(url);
 }
 function initSupabaseFromInputs() {
-  settings.url = $('supabaseUrlInput').value.trim();
-  settings.anon = $('supabaseAnonInput').value.trim();
   settings.email = $('emailInput').value.trim();
   settings.theme = $('themeInput')?.value || settings.theme || 'auto';
   localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
-  if (!settings.url || !settings.anon) { toast('先填写 URL 和 anon key'); return null; }
   if (!window.supabase) { toast('Supabase SDK 未加载，检查网络或 CDN'); return null; }
-  supabaseClient = window.supabase.createClient(settings.url, settings.anon);
+  if (!supabaseClient) supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   return supabaseClient;
 }
 async function refreshUser() {
-  if (!supabaseClient && settings.url && settings.anon && window.supabase) supabaseClient = window.supabase.createClient(settings.url, settings.anon);
+  if (!supabaseClient && window.supabase) supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   if (!supabaseClient) return null;
   const { data } = await supabaseClient.auth.getUser();
   currentUser = data.user || null;
@@ -1458,14 +1473,26 @@ function renderSyncStatus(mode) {
   if (mode === 'syncing') { node.textContent = '自动同步中'; node.className = 'status'; return; }
   if (mode === 'synced') { node.textContent = '已自动同步'; node.className = 'status ok'; return; }
   if (currentUser) { node.textContent = 'Supabase 已登录 · 自动同步'; node.className = 'status ok'; }
-  else if (settings.url && settings.anon) { node.textContent = '已配置未登录'; node.className = 'status'; }
-  else { node.textContent = '本地模式'; node.className = 'status'; }
+  else { node.textContent = 'Supabase 未登录'; node.className = 'status'; }
 }
-async function testConfig() {
+async function sendPasswordReset() {
   if (!initSupabaseFromInputs()) return;
-  toast('配置可用，下一步注册或登录');
+  const email = $('emailInput').value.trim();
+  if (!email) return toast('先填写邮箱');
+  const { error } = await supabaseClient.auth.resetPasswordForEmail(email, { redirectTo: location.href });
+  if (error) return toast(`重置邮件发送失败：${error.message}`);
+  toast('已发送密码重置邮件，请到邮箱继续操作');
+}
+async function updatePassword() {
+  if (!initSupabaseFromInputs()) return;
   await refreshUser();
-  renderSyncStatus();
+  if (!currentUser) return toast('请先登录，或通过重置邮件打开页面后再修改密码');
+  const password = $('newPasswordInput').value;
+  if (!password || password.length < 6) return toast('新密码至少 6 位');
+  const { error } = await supabaseClient.auth.updateUser({ password });
+  if (error) return toast(`修改密码失败：${error.message}`);
+  $('newPasswordInput').value = '';
+  toast('密码已修改');
 }
 async function signup() {
   if (!initSupabaseFromInputs()) return;
@@ -1609,9 +1636,10 @@ function bindEvents() {
     resetProjectForm();
     saveLocal();
   });
-  $('testConfigBtn').addEventListener('click', testConfig);
   $('signupBtn').addEventListener('click', signup);
   $('loginBtn').addEventListener('click', login);
+  $('resetPasswordBtn').addEventListener('click', sendPasswordReset);
+  $('updatePasswordBtn').addEventListener('click', updatePassword);
   $('logoutBtn').addEventListener('click', logout);
   $('pushCloudBtn').addEventListener('click', pushCloud);
   $('pullCloudBtn').addEventListener('click', pullCloud);
@@ -1629,8 +1657,6 @@ function bindEvents() {
 }
 async function init() {
   migrateState();
-  $('supabaseUrlInput').value = settings.url || '';
-  $('supabaseAnonInput').value = settings.anon || '';
   $('emailInput').value = settings.email || '';
   applyBrandSettings();
   fillAiForm({ status: '等待登录后读取账号配置' });
@@ -1644,8 +1670,8 @@ async function init() {
   setInterval(renderQuote, 3600000);
   renderTimer();
   let loadedRemote = false;
-  if (settings.url && settings.anon && window.supabase) {
-    supabaseClient = window.supabase.createClient(settings.url, settings.anon);
+  if (window.supabase) {
+    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     await refreshUser();
     if (currentUser) {
       loadedRemote = await pullCloud({ silent: true, keepView: true });
