@@ -68,7 +68,7 @@
     .nav { display: grid; gap: 8px; }
     .side-actions { display: grid; gap: 14px; }
     .mobile-actions { display: none; }
-    .mobile-action-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-top: 10px; }
+    .mobile-action-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(92px,1fr)); gap: 8px; margin-top: 10px; }
     .brand-editor { margin-top: 10px; }
     .brand-editor summary { cursor: pointer; font-weight: 900; color: var(--theme-contrast); list-style: none; }
     .brand-editor summary::-webkit-details-marker { display: none; }
@@ -81,6 +81,7 @@
     .markdown-preview ul, .markdown-preview ol { padding-left: 1.35em; margin: 8px 0; }
     .markdown-preview code { background: var(--soft-card); padding: 2px 5px; border-radius: 6px; }
     .nav button { background: #fff; border: 1px solid var(--line); color: #1f2937; text-align: left; display: flex; justify-content: space-between; align-items: center; }
+    .desktop-tab { display: flex; }
     .nav button.on { background: linear-gradient(135deg,var(--soft-card),rgba(255,255,255,.95)); color: var(--theme-contrast); border-color: var(--mint); }
     .primary { background: linear-gradient(135deg,var(--mint),var(--soft-card)); color: var(--theme-contrast); }
     .ghost { background: rgba(255,255,255,.78); color: var(--green); border: 1px solid var(--line); }
@@ -95,6 +96,7 @@
     .bar { height: 12px; background: rgba(255,255,255,.75); border-radius: 999px; overflow: hidden; margin: 14px 0; }
     .bar i { display: block; height: 100%; width: 0%; background: linear-gradient(90deg,var(--green),var(--mint)); }
     .view-grid { display: grid; grid-template-columns: 1fr 340px; gap: 18px; }
+    .view-grid.single { grid-template-columns: 1fr; }
     .row-task { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 12px; align-items: end; }
     .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     .row-3 { display: grid; grid-template-columns: 1.2fr 1fr 120px; gap: 10px; }
@@ -114,6 +116,10 @@
     .timer-display { font-size: 42px; font-weight: 900; letter-spacing: .06em; margin: 10px 0; color: var(--green); }
     .timer-presets { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-top: 10px; }
     .focus-log { display: grid; gap: 8px; margin-top: 12px; text-align: left; }
+    .focus-pie-wrap { display: grid; grid-template-columns: 140px 1fr; gap: 12px; align-items: center; margin-top: 12px; }
+    .focus-pie { width: 130px; height: 130px; border-radius: 50%; background: var(--soft-card); border: 1px solid var(--line); }
+    .focus-pie-legend { display: grid; gap: 6px; font-size: 13px; color: var(--sub); }
+    .focus-pie-legend i { display: inline-block; width: 10px; height: 10px; border-radius: 999px; margin-right: 6px; vertical-align: middle; }
     .focus-row { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 10px; }
     .date-tools { grid-template-columns: 170px 1fr 1fr; align-items: end; }
     .task-actions { grid-column: 2 / -1; display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-start; margin-top: -4px; }
@@ -168,11 +174,12 @@
       .app, .hero, .view-grid, .row-task, .row-2, .row-3, .settings, .kpis, .toolbar, .mini-grid { grid-template-columns: 1fr; }
       body { padding-bottom: calc(112px + env(safe-area-inset-bottom)); }
       .side { position: static; height: auto; padding-bottom: 12px; }
-      .nav { position: fixed; left: 10px; right: 10px; bottom: max(10px, env(safe-area-inset-bottom)); top: auto; z-index: 1000; grid-template-columns: repeat(5,1fr); gap: 6px; padding: 8px; border: 1px solid var(--line); border-radius: 22px; background: rgba(255,255,255,.94); box-shadow: var(--shadow); backdrop-filter: blur(16px); transform: translateZ(0); }
+      .nav { position: fixed; left: 10px; right: 10px; bottom: max(10px, env(safe-area-inset-bottom)); top: auto; z-index: 1000; display: grid; grid-template-columns: repeat(5,1fr); gap: 6px; padding: 8px; border: 1px solid var(--line); border-radius: 22px; background: rgba(255,255,255,.94); box-shadow: var(--shadow); backdrop-filter: blur(16px); transform: translateZ(0); }
       .nav button { justify-content: center; text-align: center; flex-direction: column; gap: 2px; padding: 8px 4px; border-radius: 15px; font-size: 12px; line-height: 1.2; min-height: 54px; }
       .nav button b { font-size: 11px; }
+      .desktop-tab { display: none !important; }
       .side-actions { display: none; }
-      .mobile-actions { display: block; margin: 0 18px 12px; padding: 12px; border: 1px solid var(--line); border-radius: 22px; background: rgba(255,255,255,.72); box-shadow: var(--shadow); }
+      .mobile-actions { display: block; margin: 18px 0 118px; padding: 12px; border: 1px solid var(--line); border-radius: 22px; background: rgba(255,255,255,.72); box-shadow: var(--shadow); }
       .mobile-actions summary { cursor: pointer; font-weight: 900; color: var(--theme-contrast); }
       .mobile-actions button { padding: 10px 8px; border-radius: 14px; }
       .main { padding: 18px; }
@@ -180,6 +187,7 @@
       .task-item { grid-template-columns: auto 1fr; }
       .task-actions { grid-column: 2 / -1; justify-content: flex-start; }
       .task-actions button { flex: 1 1 78px; }
+      .focus-pie-wrap { grid-template-columns: 1fr; justify-items: center; }
     }
   </style>
 </head>
@@ -203,10 +211,11 @@
     </div>
     <div class="nav">
       <button class="on" data-view="today">今日计划 <b id="countToday">0</b></button>
+      <button data-view="checkin">打卡专注 <b id="focusNavCount">0m</b></button>
       <button data-view="thesis">项目进度 <b id="countProject">0</b></button>
       <button data-view="review">复盘归档 <b id="countDone">0</b></button>
-      <button data-view="report">AI总结 <b>3</b></button>
-      <button data-view="cloud">云同步 <b>4.1</b></button>
+      <button data-view="report">AI总结 <b>4.2</b></button>
+      <button class="desktop-tab" data-view="cloud">云同步 <b>4.2</b></button>
     </div>
     <div class="side-actions">
       <button id="pushSideBtn" class="ghost">推送云端</button>
@@ -215,15 +224,6 @@
       <button id="clearBtn" class="danger">清空本地</button>
     </div>
   </aside>
-  <details class="mobile-actions">
-    <summary>云端 / 导出工具</summary>
-    <div class="mobile-action-grid">
-      <button id="pushMobileBtn" class="ghost">推送云端</button>
-      <button id="pullMobileBtn" class="ghost">拉取云端</button>
-      <button id="exportMobileBtn" class="ghost">导出全部</button>
-    </div>
-  </details>
-
   <main class="main">
     <section class="hero">
       <div class="card">
@@ -244,7 +244,7 @@
       </div>
     </section>
 
-    <section id="view-today" class="view view-grid">
+    <section id="view-today" class="view view-grid single">
       <div class="card">
         <h2>今日计划</h2>
         <div class="row-task">
@@ -276,43 +276,45 @@
         </div>
         <div id="taskList"></div>
       </div>
-      <aside>
-        <div class="card">
-          <h2>今日打卡</h2>
-          <input id="focusInput" placeholder="今日主线" />
-          <div class="row-2" style="margin:10px 0">
-            <label class="field"><span>今日精力</span><select id="energyInput"><option value="0">0%</option><option value="25">25%</option><option value="50" selected>50%</option><option value="75">75%</option><option value="100">100%</option></select></label>
-            <label class="field"><span>今日状态</span><select id="moodInput"><option value="稳定" selected>😌 稳定</option><option value="平静">🌿 平静</option><option value="高效">🔥 高效</option><option value="开心">😊 开心</option><option value="焦虑">😵‍💫 焦虑</option><option value="紧张">⏳ 紧张</option><option value="卡住">🧱 卡住</option><option value="疲惫">😴 疲惫</option><option value="低落">🌧️ 低落</option><option value="兴奋">✨ 兴奋</option></select></label>
-          </div>
-          <div class="note-tabs">
-            <textarea id="researchNoteInput" placeholder="科研想法：卡点、灵感、导师建议、实验/论文/项目记录"></textarea>
-            <textarea id="fitnessNoteInput" placeholder="健身想法：运动、睡眠、饮食、身体状态"></textarea>
-            <textarea id="growthNoteInput" placeholder="成长想法：情绪、人际、习惯、复盘、长期提醒"></textarea>
-          </div>
-          <button id="saveDailyBtn" class="primary" style="width:100%;margin-top:10px">保存打卡</button>
-          <div class="chart-card"><b>本月精力量化折线图</b><div id="energyChart"></div></div>
+    </section>
+
+    <section id="view-checkin" class="view view-grid hidden">
+      <div class="card">
+        <h2>今日打卡</h2>
+        <input id="focusInput" placeholder="今日主线" />
+        <div class="row-2" style="margin:10px 0">
+          <label class="field"><span>今日精力</span><select id="energyInput"><option value="0">0%</option><option value="25">25%</option><option value="50" selected>50%</option><option value="75">75%</option><option value="100">100%</option></select></label>
+          <label class="field"><span>今日状态</span><select id="moodInput"><option value="稳定" selected>😌 稳定</option><option value="平静">🌿 平静</option><option value="高效">🔥 高效</option><option value="开心">😊 开心</option><option value="焦虑">😵‍💫 焦虑</option><option value="紧张">⏳ 紧张</option><option value="卡住">🧱 卡住</option><option value="疲惫">😴 疲惫</option><option value="低落">🌧️ 低落</option><option value="兴奋">✨ 兴奋</option></select></label>
         </div>
-        <div class="card timer" style="margin-top:18px">
-          <h2>专注计时</h2>
-          <label class="field" style="text-align:left"><span>本轮专注事项</span><select id="focusTaskSelect"></select></label>
-          <input id="focusTopicInput" style="margin-top:8px" placeholder="或手动填写专注内容" />
-          <div id="timerDisplay" class="timer-display">25:00</div>
-          <p id="timerHint" class="sub">选择一个任务，开始一轮不被打扰的推进；完成后会自动记录日期、事项和分钟数。</p>
-          <div class="quick" style="justify-content:center">
-            <button id="startTimerBtn" class="primary">开始</button>
-            <button id="pauseTimerBtn" class="ghost">暂停</button>
-            <button id="resetTimerBtn" class="ghost">重置</button>
-            <button id="logFocusBtn" class="ghost">记录本轮</button>
-          </div>
-          <div class="timer-presets">
-            <button data-minutes="15" class="ghost">15m</button>
-            <button data-minutes="25" class="ghost">25m</button>
-            <button data-minutes="50" class="ghost">50m</button>
-          </div>
-          <div id="focusLogList" class="focus-log"></div>
+        <div class="note-tabs">
+          <textarea id="researchNoteInput" placeholder="科研想法：卡点、灵感、导师建议、实验/论文/项目记录"></textarea>
+          <textarea id="fitnessNoteInput" placeholder="健身想法：运动、睡眠、饮食、身体状态"></textarea>
+          <textarea id="growthNoteInput" placeholder="成长想法：情绪、人际、习惯、复盘、长期提醒"></textarea>
         </div>
+        <button id="saveDailyBtn" class="primary" style="width:100%;margin-top:10px">保存打卡</button>
+        <div class="chart-card"><b>本月精力量化折线图</b><div id="energyChart"></div></div>
         <div class="card" style="margin-top:18px"><h2>今日建议</h2><p id="adviceText" class="sub">先选一个 15 分钟能启动的任务。</p></div>
-      </aside>
+      </div>
+      <div class="card timer">
+        <h2>专注计时</h2>
+        <label class="field" style="text-align:left"><span>本轮专注事项</span><select id="focusTaskSelect"></select></label>
+        <input id="focusTopicInput" style="margin-top:8px" placeholder="或手动填写专注内容" />
+        <div id="timerDisplay" class="timer-display">25:00</div>
+        <p id="timerHint" class="sub">选择一个任务，开始一轮不被打扰的推进；完成后会自动记录日期、事项和分钟数。</p>
+        <div class="quick" style="justify-content:center">
+          <button id="startTimerBtn" class="primary">开始</button>
+          <button id="pauseTimerBtn" class="ghost">暂停</button>
+          <button id="resetTimerBtn" class="ghost">重置</button>
+          <button id="logFocusBtn" class="ghost">记录本轮</button>
+        </div>
+        <div class="timer-presets">
+          <button data-minutes="15" class="ghost">15m</button>
+          <button data-minutes="25" class="ghost">25m</button>
+          <button data-minutes="50" class="ghost">50m</button>
+        </div>
+        <div class="chart-card"><b>今日专注分布</b><div id="focusPieChart"></div></div>
+        <div id="focusLogList" class="focus-log"></div>
+      </div>
     </section>
 
     <section id="view-thesis" class="view card hidden">
@@ -361,16 +363,13 @@
 
     <section id="view-report" class="view card hidden">
       <h2>AI 每周总结 / 自定义处理</h2>
-      <p class="sub">手动周报/月报按钮已移除；现在由 AI 根据每周数据生成总结，或者按你输入的需求处理当前数据并归档。</p>
       <div class="ai-panel">
         <h3>AI 总结与处理</h3>
-        <p class="sub">前端只调用你自己的 Supabase Edge Function。默认总结最近 7 天内容；也可以选择“自定义需求”，直接告诉 AI 你想让它做什么。页面只展示阅读版，不再显示带 # 的原始输出。</p>
-        <div class="notice"><b>部署提示：</b>先运行 `schema.sql`，再部署 `supabase/functions/ai-review`。可先点“测试后端通道”确认函数和账号配置可用。</div>
         <div class="settings">
           <label class="field"><span>后端函数名</span><input id="aiFunctionInput" placeholder="ai-review" /></label>
           <label class="field"><span>供应商</span><select id="aiProviderInput"><option value="deepseek">DeepSeek</option><option value="openai">OpenAI 兼容</option><option value="custom">自定义兼容接口</option></select></label>
           <label class="field"><span>后端调用 Base URL</span><input id="aiBaseUrlInput" placeholder="https://api.deepseek.com" /></label>
-          <label class="field"><span>模型名</span><input id="aiModelInput" placeholder="deepseek-chat" /></label>
+          <label class="field"><span>模型名</span><select id="aiModelInput"><option value="deepseek-v4-flash">DeepSeek V4 Flash</option><option value="deepseek-v4-pro">DeepSeek V4 Pro</option><option value="deepseek-chat">DeepSeek Chat</option></select></label>
           <label class="field"><span>API Key</span><input id="aiKeyInput" type="password" placeholder="保存到当前 Supabase 账号" /></label>
           <label class="field"><span>配置状态</span><input id="aiStatusInput" readonly placeholder="未读取" /></label>
         </div>
@@ -409,6 +408,16 @@
         <button id="logoutBtn" class="danger">退出</button>
       </div>
     </section>
+
+    <details class="mobile-actions">
+      <summary>云端 / 导出工具</summary>
+      <div class="mobile-action-grid">
+        <button id="cloudMobileBtn" class="ghost">账号同步</button>
+        <button id="pushMobileBtn" class="ghost">推送云端</button>
+        <button id="pullMobileBtn" class="ghost">拉取云端</button>
+        <button id="exportMobileBtn" class="ghost">导出全部</button>
+      </div>
+    </details>
   </main>
   <div class="mobile-actions">
     <button id="pushMobileBtn" class="ghost">推送云端</button>
@@ -544,8 +553,8 @@ function loadState() {
   catch { return { tasks: [], daily: {}, archive: {}, aiReviews: {}, thesis: {}, projects: [], focusSessions: [] }; }
 }
 function loadSettings() {
-  try { return Object.assign({ email: '', theme: 'auto', brandLogo: '开', brandTitle: '开开的博士成长计划', brandSubtitle: '计划 · 项目 · 复盘 · 云同步', aiFunction: 'ai-review', aiProvider: 'deepseek', aiBaseUrl: 'https://api.deepseek.com', aiModel: 'deepseek-chat' }, JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}')); }
-  catch { return { email: '', theme: 'auto', brandLogo: '开', brandTitle: '开开的博士成长计划', brandSubtitle: '计划 · 项目 · 复盘 · 云同步', aiFunction: 'ai-review', aiProvider: 'deepseek', aiBaseUrl: 'https://api.deepseek.com', aiModel: 'deepseek-chat' }; }
+  try { return Object.assign({ email: '', theme: 'auto', brandLogo: '开', brandTitle: '开开的博士成长计划', brandSubtitle: '计划 · 项目 · 复盘 · 云同步', aiFunction: 'ai-review', aiProvider: 'deepseek', aiBaseUrl: 'https://api.deepseek.com', aiModel: 'deepseek-v4-flash' }, JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}')); }
+  catch { return { email: '', theme: 'auto', brandLogo: '开', brandTitle: '开开的博士成长计划', brandSubtitle: '计划 · 项目 · 复盘 · 云同步', aiFunction: 'ai-review', aiProvider: 'deepseek', aiBaseUrl: 'https://api.deepseek.com', aiModel: 'deepseek-v4-flash' }; }
 }
 function toast(message) {
   const node = $('toast');
@@ -960,10 +969,38 @@ function logFocusSession(minutes = currentElapsedMinutes(), source = 'manual') {
   renderTimer();
   toast(`已记录 ${minutes} 分钟专注`);
 }
+function renderFocusPie(sessions = focusSessionsByDate(TODAY)) {
+  const node = $('focusPieChart');
+  if (!node) return;
+  const grouped = sessions.reduce((acc, session) => {
+    const topic = session.topic || '未命名专注';
+    acc[topic] = (acc[topic] || 0) + Number(session.minutes || 0);
+    return acc;
+  }, {});
+  const entries = Object.entries(grouped).sort((a, b) => b[1] - a[1]).slice(0, 6);
+  const total = entries.reduce((sum, item) => sum + item[1], 0);
+  if (!total) {
+    node.innerHTML = '<p class="sub">今天还没有专注记录，完成一轮后会生成饼图。</p>';
+    return;
+  }
+  const colors = ['var(--green)', 'var(--mint)', 'var(--theme-bg-2)', '#ffd6a5', '#cdb4db', '#a0c4ff'];
+  let start = 0;
+  const slices = entries.map(([, minutes], index) => {
+    const end = start + minutes / total * 100;
+    const slice = `${colors[index % colors.length]} ${start}% ${end}%`;
+    start = end;
+    return slice;
+  });
+  const legend = entries.map(([topic, minutes], index) => `<span><i style="background:${colors[index % colors.length]}"></i>${escapeHtml(topic)}：${minutes} 分钟</span>`).join('');
+  node.innerHTML = `<div class="focus-pie-wrap"><div class="focus-pie" style="background:conic-gradient(${slices.join(',')})"></div><div class="focus-pie-legend">${legend}</div></div>`;
+}
 function renderFocusLog() {
   renderFocusTaskOptions();
   const sessions = focusSessionsByDate(TODAY);
-  $('focusTodayCount').textContent = `${focusMinutesByDate(TODAY)}m`;
+  const todayMinutes = focusMinutesByDate(TODAY);
+  $('focusTodayCount').textContent = `${todayMinutes}m`;
+  $('focusNavCount').textContent = `${todayMinutes}m`;
+  renderFocusPie(sessions);
   $('focusLogList').innerHTML = sessions.length ? sessions.slice(0, 5).map(session => `
     <div class="focus-row"><b>${escapeHtml(session.topic)}</b><div class="meta">${session.minutes} 分钟 · ${formatTime(session.startedAt)}${session.source === 'timer' ? ' · 自动记录' : ''}</div></div>
   `).join('') : '<p class="sub">今天还没有专注记录。完成一轮或点击“记录本轮”后会显示在这里。</p>';
@@ -1270,7 +1307,7 @@ function readAiForm() {
     functionName: aiFunctionName(),
     provider: $('aiProviderInput').value || 'deepseek',
     apiBaseUrl: $('aiBaseUrlInput').value.trim() || 'https://api.deepseek.com',
-    model: $('aiModelInput').value.trim() || 'deepseek-chat',
+    model: $('aiModelInput').value || 'deepseek-v4-flash',
     apiKey: $('aiKeyInput').value.trim()
   };
 }
@@ -1278,7 +1315,7 @@ function fillAiForm(config = {}) {
   $('aiFunctionInput').value = config.functionName || settings.aiFunction || 'ai-review';
   $('aiProviderInput').value = config.provider || settings.aiProvider || 'deepseek';
   $('aiBaseUrlInput').value = config.apiBaseUrl || settings.aiBaseUrl || 'https://api.deepseek.com';
-  $('aiModelInput').value = config.model || settings.aiModel || 'deepseek-chat';
+  $('aiModelInput').value = config.model || settings.aiModel || 'deepseek-v4-flash';
   if (config.apiKey !== undefined) $('aiKeyInput').value = config.apiKey || '';
   $('aiStatusInput').value = config.status || '';
 }
@@ -1320,7 +1357,7 @@ async function loadAiSettings(options = {}) {
   const { data, error } = await supabaseClient.from('research_growth_ai_settings').select('provider,api_base_url,model,api_key,updated_at').eq('user_id', currentUser.id).maybeSingle();
   if (error) { if (!options.silent) toast(`读取 AI 配置失败：${error.message}`); return false; }
   if (!data) { if (!options.silent) toast('账号还没有保存 AI 配置'); fillAiForm({ status: '账号未保存配置' }); return false; }
-  const config = { functionName: settings.aiFunction || 'ai-review', provider: data.provider || 'deepseek', apiBaseUrl: data.api_base_url || 'https://api.deepseek.com', model: data.model || 'deepseek-chat', apiKey: data.api_key || '', status: `已读取账号配置 · ${formatTime(data.updated_at)}` };
+  const config = { functionName: settings.aiFunction || 'ai-review', provider: data.provider || 'deepseek', apiBaseUrl: data.api_base_url || 'https://api.deepseek.com', model: data.model || 'deepseek-v4-flash', apiKey: data.api_key || '', status: `已读取账号配置 · ${formatTime(data.updated_at)}` };
   fillAiForm(config);
   rememberAiForm(config);
   if (!options.silent) toast('已读取账号 AI 配置');
@@ -1645,6 +1682,7 @@ function bindEvents() {
   $('pullCloudBtn').addEventListener('click', pullCloud);
   $('pushSideBtn').addEventListener('click', pushCloud);
   $('pullSideBtn').addEventListener('click', pullCloud);
+  $('cloudMobileBtn').addEventListener('click', () => showView('cloud'));
   $('pushMobileBtn').addEventListener('click', pushCloud);
   $('pullMobileBtn').addEventListener('click', pullCloud);
   $('exportMobileBtn').addEventListener('click', exportAll);

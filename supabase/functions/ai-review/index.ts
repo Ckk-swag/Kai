@@ -67,7 +67,7 @@ async function requestAiReview(settings: AiSettings, reviewData: unknown, review
       Authorization: `Bearer ${settings.api_key}`,
     },
     body: JSON.stringify({
-      model: settings.model || 'deepseek-chat',
+      model: settings.model || 'deepseek-v4-flash',
       messages: [
         { role: 'system', content: '你是一个温柔但具体的博士成长教练。请基于用户提供的结构化数据，用中文输出。结构要清晰，便于前端渲染成阅读版；不要输出 # 字符作为标题。' },
         { role: 'user', content: prompt },
