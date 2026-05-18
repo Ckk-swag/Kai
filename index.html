@@ -419,6 +419,11 @@
       </div>
     </details>
   </main>
+  <div class="mobile-actions">
+    <button id="pushMobileBtn" class="ghost">推送云端</button>
+    <button id="pullMobileBtn" class="ghost">拉取云端</button>
+    <button id="exportMobileBtn" class="ghost">导出全部</button>
+  </div>
 </div>
 <div id="toast" class="toast"></div>
 <div id="celebration" class="celebration"></div>
@@ -1443,6 +1448,16 @@ function showView(view) {
   document.querySelectorAll('.view').forEach(node => node.classList.add('hidden'));
   target.classList.remove('hidden');
   document.querySelectorAll('.nav button').forEach(btn => btn.classList.toggle('on', btn.dataset.view === view));
+}
+function copyReport() {
+  const text = $('reportText').value.trim();
+  if (!text) return toast('先生成周报或月报');
+  if (!navigator.clipboard) {
+    $('reportText').select();
+    document.execCommand('copy');
+    return toast('报告已复制');
+  }
+  navigator.clipboard.writeText(text).then(() => toast('报告已复制')).catch(() => toast('复制失败，请手动全选复制'));
 }
 function exportAll() {
   const lines = [
