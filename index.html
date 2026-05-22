@@ -94,7 +94,7 @@
     .growth strong { display: block; font-size: 34px; }
     .bar { height: 12px; background: rgba(255,255,255,.75); border-radius: 999px; overflow: hidden; margin: 14px 0; }
     .bar i { display: block; height: 100%; width: 0%; background: linear-gradient(90deg,var(--green),var(--mint)); }
-    .view-grid { display: grid; grid-template-columns: 1fr 340px; gap: 18px; }
+    .view-grid { display: grid; grid-template-columns: minmax(0,1fr) 340px; gap: 18px; align-items: start; }
     .view-grid.single { grid-template-columns: 1fr; }
     .row-task { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 12px; align-items: end; }
     .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
@@ -295,7 +295,7 @@
           <div class="mini-card"><span>逾期叠加</span><b id="overdueCount">0</b></div>
           <div class="mini-card"><span>本周待办</span><b id="weekLeftCount">0</b></div>
           <div class="mini-card"><span>连续打卡</span><b id="streakCount">0</b></div>
-          <div class="mini-card"><span>今日专注</span><b id="focusTodayCount">0m</b></div>
+          <div class="mini-card"><span>今日打卡</span><b id="focusTodayCount">0</b></div>
         </div>
         <div id="taskList"></div>
         <div class="card" style="margin-top:18px">
@@ -999,7 +999,7 @@ function renderFocusPie(sessions = focusSessionsByDate(TODAY)) {
 function renderFocusLog() {
   const sessions = focusSessionsByDate(TODAY);
   const todayMinutes = focusMinutesByDate(TODAY);
-  $('focusTodayCount').textContent = `${todayMinutes}m`;
+  $('focusTodayCount').textContent = state.daily?.[TODAY]?.checked ? '已打卡' : '未打卡';
   const logNode = $('focusLogList');
   if (!logNode) return;
   renderFocusTaskOptions();
