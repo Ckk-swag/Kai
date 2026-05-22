@@ -235,8 +235,7 @@
     </div>
     <div class="nav summary-stats">
       <button class="on stat-card" data-view="today">今日计划 <b id="countToday">0</b></button>
-      <button class="stat-card" data-view="today">打卡专注 <b id="focusNavCount">0m</b></button>
-      <button class="stat-card" data-view="thesis">项目进度 <b id="countProject">0</b></button>
+            <button class="stat-card" data-view="thesis">项目进度 <b id="countProject">0</b></button>
       <button class="stat-card" data-view="review">复盘归档 <b id="countDone">0</b></button>
       <button class="stat-card" data-view="report">AI总结 <b>4.3</b></button>
       <button class="desktop-tab stat-card" data-view="cloud">云同步 <b>4.3</b></button>
@@ -313,7 +312,6 @@
           </div>
           <button id="saveDailyBtn" class="primary" style="width:100%;margin-top:10px">保存打卡</button>
           <div class="chart-card"><b>本月精力量化折线图</b><div id="energyChart"></div></div>
-          <div class="card" style="margin-top:18px"><h2>今日建议</h2><p id="adviceText" class="sub">先选一个 15 分钟能启动的任务。</p></div>
         </div>
       </div>
     </section>
@@ -1002,7 +1000,6 @@ function renderFocusLog() {
   const sessions = focusSessionsByDate(TODAY);
   const todayMinutes = focusMinutesByDate(TODAY);
   $('focusTodayCount').textContent = `${todayMinutes}m`;
-  if ($('focusNavCount')) $('focusNavCount').textContent = `${todayMinutes}m`;
   const logNode = $('focusLogList');
   if (!logNode) return;
   renderFocusTaskOptions();
