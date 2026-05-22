@@ -1,4 +1,4 @@
-# 4.3 部署说明
+# 4.3.1 部署说明
 
 ## GitHub Pages
 新建仓库，把 public/index.html 上传到仓库根目录，并命名为 index.html。
@@ -10,7 +10,7 @@
 
 打开网页“账号与云同步”页，只填写邮箱和密码，注册/登录即可。
 
-## 4.3 AI 复盘后端函数
+## 4.3.1 AI 复盘后端函数
 1. 先在 Supabase SQL Editor 重新运行仓库根目录的 `schema.sql`，创建 `research_growth_ai_settings`。
 2. 部署 Edge Function：`supabase functions deploy ai-review`。
 3. 前端“AI总结”页只会调用 Supabase Function `ai-review`，不会直接请求 DeepSeek / OpenAI 兼容接口。

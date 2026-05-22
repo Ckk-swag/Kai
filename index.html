@@ -81,6 +81,7 @@
     .nav button { background: #fff; border: 1px solid var(--line); color: #1f2937; text-align: left; display: flex; justify-content: space-between; align-items: center; }
     .desktop-tab { display: flex; }
     .stat-card { min-width: 0; }
+    .mobile-bottom-stats-bar { display: none; }
     .nav button.on { background: linear-gradient(135deg,var(--soft-card),rgba(255,255,255,.95)); color: var(--theme-contrast); border-color: var(--mint); }
     .primary { background: linear-gradient(135deg,var(--mint),var(--soft-card)); color: var(--theme-contrast); }
     .ghost { background: rgba(255,255,255,.78); color: var(--green); border: 1px solid var(--line); }
@@ -173,24 +174,25 @@
       .app, .hero, .view-grid, .row-task, .row-2, .row-3, .settings, .kpis, .toolbar, .mini-grid { grid-template-columns: 1fr; }
       body, main, .app, .container { padding-bottom: 110px !important; }
       .side { position: static; height: auto; padding-bottom: 12px; }
-      .summary-stats {
+      .desktop-summary-stats { display: none !important; }
+      .mobile-bottom-stats-bar {
         position: fixed !important;
         left: 12px !important;
         right: 12px !important;
         bottom: calc(12px + env(safe-area-inset-bottom)) !important;
-        z-index: 9999 !important;
+        z-index: 99999 !important;
         display: flex !important;
         flex-direction: row !important;
         justify-content: space-between !important;
         align-items: center !important;
-        gap: 6px !important;
+        gap: 8px !important;
         padding: 8px 10px !important;
         border-radius: 22px !important;
         background: rgba(255, 255, 255, 0.94) !important;
         backdrop-filter: blur(14px) !important;
-        box-shadow: 0 8px 28px rgba(0, 0, 0, 0.15) !important;
+        box-shadow: 0 10px 32px rgba(0, 0, 0, 0.16) !important;
       }
-      .summary-stats .stat-card {
+      .mobile-bottom-stats-bar .stat-card {
         flex: 1 !important;
         min-width: 0 !important;
         height: 56px !important;
@@ -203,7 +205,7 @@
         font-size: 12px;
         line-height: 1.2;
       }
-      .summary-stats .stat-card b { font-size: 11px; }
+      .mobile-bottom-stats-bar .stat-card b { font-size: 11px; }
       .desktop-tab { display: none !important; }
       .side-actions { display: none; }
       .main { padding: 18px; }
@@ -212,6 +214,10 @@
       .task-actions { grid-column: 2 / -1; justify-content: flex-start; }
       .task-actions button { flex: 1 1 78px; }
       .focus-pie-wrap { grid-template-columns: 1fr; justify-items: center; }
+    }
+    @media (min-width: 769px) {
+      .mobile-bottom-stats-bar { display: none !important; }
+      .desktop-summary-stats { display: grid; }
     }
   </style>
 </head>
@@ -233,12 +239,12 @@
         <label class="field" style="margin-top:10px"><span>副标题</span><input id="brandSubtitleInput" placeholder="计划 · 项目 · 复盘 · 云同步" /></label>
       </details>
     </div>
-    <div class="nav summary-stats">
+    <div class="nav summary-stats desktop-summary-stats">
       <button class="on stat-card" data-view="today">今日计划 <b id="countToday">0</b></button>
-            <button class="stat-card" data-view="thesis">项目进度 <b id="countProject">0</b></button>
+      <button class="stat-card" data-view="thesis">项目进度 <b id="countProject">0</b></button>
       <button class="stat-card" data-view="review">复盘归档 <b id="countDone">0</b></button>
-      <button class="stat-card" data-view="report">AI总结 <b>4.3</b></button>
-      <button class="desktop-tab stat-card" data-view="cloud">云同步 <b>4.3</b></button>
+      <button class="stat-card" data-view="report">AI总结 <b>4.3.1</b></button>
+      <button class="desktop-tab stat-card" data-view="cloud">云同步 <b>4.3.1</b></button>
     </div>
     <div class="side-actions">
       <button id="pushSideBtn" class="ghost">推送云端</button>
@@ -416,6 +422,12 @@
     <button id="pullMobileBtn" class="ghost">拉取云端</button>
     <button id="exportMobileBtn" class="ghost">导出全部</button>
   </div>
+</div>
+<div id="mobileBottomStatsBar" class="mobile-bottom-stats-bar" aria-label="MobileBottomStatsBar">
+  <button class="stat-card on" data-view="today">今日计划 <b data-mobile="today">0</b></button>
+  <button class="stat-card" data-view="thesis">项目进度 <b data-mobile="project">0</b></button>
+  <button class="stat-card" data-view="review">复盘归档 <b data-mobile="done">0</b></button>
+  <button class="stat-card" data-view="report">AI总结 <b data-mobile="ai">4.3.1.1</b></button>
 </div>
 <div id="toast" class="toast"></div>
 <div id="celebration" class="celebration"></div>
@@ -1442,6 +1454,15 @@ async function generateAiReview() {
   }
 }
 
+function syncMobileBottomStats() {
+  const mToday = document.querySelector('[data-mobile="today"]');
+  const mProject = document.querySelector('[data-mobile="project"]');
+  const mDone = document.querySelector('[data-mobile="done"]');
+  if (mToday && $('countToday')) mToday.textContent = $('countToday').textContent || '0';
+  if (mProject && $('countProject')) mProject.textContent = $('countProject').textContent || '0';
+  if (mDone && $('countDone')) mDone.textContent = $('countDone').textContent || '0';
+}
+
 function renderStats() {
   const todayAll = state.tasks.filter(task => task.dueDate === TODAY || task.completedDate === TODAY);
   const todayDone = state.tasks.filter(task => task.completedDate === TODAY);
@@ -1457,6 +1478,7 @@ function renderStats() {
   $('monthRateBar').style.width = `${monthRate}%`;
   $('monthRateHint').textContent = monthAll.length ? `本月已完成 ${monthDone.length}/${monthAll.length} 项` : '本月还没有计划任务。';
   $('countToday').textContent = todayTasks().length;
+  syncMobileBottomStats();
   $('adviceText').textContent = buildAdvice();
   $('overdueCount').textContent = state.tasks.filter(task => !task.done && Number(task.carryCount || 0) > 0).length;
   $('weekLeftCount').textContent = state.tasks.filter(task => !task.done && task.dueDate >= TODAY && task.dueDate <= getWeekEndKey()).length;
@@ -1480,7 +1502,8 @@ function showView(view) {
   if (!target) return;
   document.querySelectorAll('.view').forEach(node => node.classList.add('hidden'));
   target.classList.remove('hidden');
-  document.querySelectorAll('.nav button').forEach(btn => btn.classList.toggle('on', btn.dataset.view === view));
+  document.querySelectorAll('.desktop-summary-stats button').forEach(btn => btn.classList.toggle('on', btn.dataset.view === view));
+  document.querySelectorAll('#mobileBottomStatsBar button').forEach(btn => btn.classList.toggle('on', btn.dataset.view === view));
 }
 function copyReport() {
   const text = $('reportText').value.trim();
@@ -1673,7 +1696,7 @@ function bindEvents() {
   document.querySelectorAll('.quick button[data-template]').forEach(btn => {
     btn.addEventListener('click', () => { $('taskInput').value = btn.dataset.template; $('typeInput').value = btn.dataset.type || '论文'; });
   });
-  document.querySelectorAll('.nav button').forEach(btn => btn.addEventListener('click', () => showView(btn.dataset.view)));
+  document.querySelectorAll('.desktop-summary-stats button, #mobileBottomStatsBar button').forEach(btn => btn.addEventListener('click', () => showView(btn.dataset.view)));
   $('saveDailyBtn').addEventListener('click', saveDaily);
   $('themeInput').addEventListener('change', () => { settings.theme = $('themeInput').value; localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); applyDailyTheme(); toast('主题颜色已更新'); });
   ['brandLogoInput', 'brandTitleInput', 'brandSubtitleInput'].forEach(id => $(id).addEventListener('change', saveBrandSettings));
