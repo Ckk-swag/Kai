@@ -80,6 +80,7 @@
     .markdown-preview code { background: var(--soft-card); padding: 2px 5px; border-radius: 6px; }
     .nav button { background: #fff; border: 1px solid var(--line); color: #1f2937; text-align: left; display: flex; justify-content: space-between; align-items: center; }
     .desktop-tab { display: flex; }
+    .stat-card { min-width: 0; }
     .nav button.on { background: linear-gradient(135deg,var(--soft-card),rgba(255,255,255,.95)); color: var(--theme-contrast); border-color: var(--mint); }
     .primary { background: linear-gradient(135deg,var(--mint),var(--soft-card)); color: var(--theme-contrast); }
     .ghost { background: rgba(255,255,255,.78); color: var(--green); border: 1px solid var(--line); }
@@ -168,13 +169,41 @@
     .ai-archive-list { display: grid; gap: 10px; margin-top: 12px; }
     @keyframes pop { 0% { transform: scale(.78); opacity: .2; } 55% { transform: scale(1.05); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
     @keyframes confetti { 0% { transform: translate(0,0) rotate(0deg); opacity: 1; } 100% { transform: translate(var(--dx),var(--dy)) rotate(520deg); opacity: 0; } }
-    @media(max-width: 768px) {
+    @media (max-width: 768px) {
       .app, .hero, .view-grid, .row-task, .row-2, .row-3, .settings, .kpis, .toolbar, .mini-grid { grid-template-columns: 1fr; }
-      body { padding-bottom: calc(112px + env(safe-area-inset-bottom)); }
+      body, main, .app, .container { padding-bottom: 110px !important; }
       .side { position: static; height: auto; padding-bottom: 12px; }
-      .nav { position: fixed; left: 12px; right: 12px; bottom: 12px; z-index: 999; display: flex; justify-content: space-between; align-items: center; gap: 6px; padding: 8px 10px; border-radius: 20px; background: rgba(255,255,255,.92); backdrop-filter: blur(12px); box-shadow: 0 8px 24px rgba(0,0,0,.12); transform: translateZ(0); }
-      .nav button { flex: 1 1 0; justify-content: center; text-align: center; flex-direction: column; gap: 2px; padding: 8px 4px; border-radius: 14px; font-size: 12px; line-height: 1.2; min-height: 54px; }
-      .nav button b { font-size: 11px; }
+      .summary-stats {
+        position: fixed !important;
+        left: 12px !important;
+        right: 12px !important;
+        bottom: calc(12px + env(safe-area-inset-bottom)) !important;
+        z-index: 9999 !important;
+        display: flex !important;
+        flex-direction: row !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        gap: 6px !important;
+        padding: 8px 10px !important;
+        border-radius: 22px !important;
+        background: rgba(255, 255, 255, 0.94) !important;
+        backdrop-filter: blur(14px) !important;
+        box-shadow: 0 8px 28px rgba(0, 0, 0, 0.15) !important;
+      }
+      .summary-stats .stat-card {
+        flex: 1 !important;
+        min-width: 0 !important;
+        height: 56px !important;
+        justify-content: center;
+        text-align: center;
+        flex-direction: column;
+        gap: 2px;
+        padding: 8px 4px;
+        border-radius: 14px;
+        font-size: 12px;
+        line-height: 1.2;
+      }
+      .summary-stats .stat-card b { font-size: 11px; }
       .desktop-tab { display: none !important; }
       .side-actions { display: none; }
       .main { padding: 18px; }
@@ -204,13 +233,13 @@
         <label class="field" style="margin-top:10px"><span>副标题</span><input id="brandSubtitleInput" placeholder="计划 · 项目 · 复盘 · 云同步" /></label>
       </details>
     </div>
-    <div class="nav">
-      <button class="on" data-view="today">今日计划 <b id="countToday">0</b></button>
-      <button data-view="today">打卡专注 <b id="focusNavCount">0m</b></button>
-      <button data-view="thesis">项目进度 <b id="countProject">0</b></button>
-      <button data-view="review">复盘归档 <b id="countDone">0</b></button>
-      <button data-view="report">AI总结 <b>4.3</b></button>
-      <button class="desktop-tab" data-view="cloud">云同步 <b>4.3</b></button>
+    <div class="nav summary-stats">
+      <button class="on stat-card" data-view="today">今日计划 <b id="countToday">0</b></button>
+      <button class="stat-card" data-view="today">打卡专注 <b id="focusNavCount">0m</b></button>
+      <button class="stat-card" data-view="thesis">项目进度 <b id="countProject">0</b></button>
+      <button class="stat-card" data-view="review">复盘归档 <b id="countDone">0</b></button>
+      <button class="stat-card" data-view="report">AI总结 <b>4.3</b></button>
+      <button class="desktop-tab stat-card" data-view="cloud">云同步 <b>4.3</b></button>
     </div>
     <div class="side-actions">
       <button id="pushSideBtn" class="ghost">推送云端</button>
