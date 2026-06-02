@@ -1,4 +1,5 @@
 <!doctype html>
+<!-- Kai startup version: 4.3.2-fixed-20260602 -->
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8" />
@@ -241,7 +242,7 @@
     </div>
     <div class="nav summary-stats desktop-summary-stats">
       <button class="on stat-card" data-view="today">今日计划 <b id="countToday">0</b></button>
-      <button class="stat-card" data-view="thesis">项目进度 <b id="countProject">0</b></button>
+      <button class="stat-card" data-view="thesis">论文进度 <b id="countProject">0</b></button>
       <button class="stat-card" data-view="review">复盘归档 <b id="countDone">0</b></button>
       <button class="stat-card" data-view="report">AI总结 <b>4.3.2</b></button>
       <button class="desktop-tab stat-card" data-view="cloud">云同步 <b>4.3.2</b></button>
@@ -325,10 +326,10 @@
 
 
     <section id="view-thesis" class="view card hidden">
-      <h2>项目进度</h2>
-      <p class="sub">这里不只放论文，也可以新增专利、比赛、课题、课程或其他长期项目。</p>
+      <h2>论文进度</h2>
+      <p class="sub">保留论文主线，也可以继续记录专利、比赛、课题、课程或其他长期项目。</p>
       <div class="row-3">
-        <label class="field"><span>项目名称</span><input id="projectTitleInput" placeholder="例如：博士论文 / 专利A / 数模比赛" /></label>
+        <label class="field"><span>论文题目/研究主题</span><input id="projectTitleInput" placeholder="例如：博士论文主题 / 专利A / 数模比赛" /></label>
         <label class="field"><span>项目类型</span><select id="projectTypeInput"><option>论文</option><option>专利</option><option>课题</option><option>比赛</option><option>课程</option><option>行政</option><option>其他</option></select></label>
         <label class="field"><span>进度%</span><input id="projectProgressInput" type="number" min="0" max="100" placeholder="进度%" /></label>
       </div>
@@ -343,11 +344,11 @@
       <textarea id="projectBlockersInput" style="margin-top:10px" placeholder="当前卡点 / 需要导师或合作者反馈的问题"></textarea>
       <input id="editingProjectId" type="hidden" />
       <div class="quick">
-        <button id="saveProjectBtn" class="primary">保存项目</button>
-        <button id="resetProjectBtn" class="ghost">新建项目</button>
+        <button id="saveProjectBtn" class="primary">保存论文进度</button>
+        <button id="resetProjectBtn" class="ghost">新建进度</button>
       </div>
       <div class="kpis">
-        <div><span class="sub">项目数量</span><b id="projectCountView">0</b></div>
+        <div><span class="sub">进度条目</span><b id="projectCountView">0</b></div>
         <div><span class="sub">平均进度</span><b id="projectAverageView">0%</b></div>
         <div><span class="sub">最近更新</span><b id="projectUpdatedView">-</b></div>
       </div>
@@ -383,6 +384,8 @@
         <label class="field" style="margin-top:10px"><span>AI 模式</span><select id="aiModeInput"><option value="weekly">总结最近一周</option><option value="custom">按我的需求处理</option></select></label>
         <textarea id="aiRequestInput" style="margin-top:10px;min-height:110px" placeholder="自定义需求示例：帮我找出本周拖延最多的任务类型，并给出明天的三步计划。选择“按我的需求处理”时会使用这里的内容。"></textarea>
         <div class="quick">
+          <button id="weeklyReportBtn" class="ghost">生成周报</button>
+          <button id="monthlyReportBtn" class="ghost">生成月报</button>
           <button id="saveAiSettingsBtn" class="primary">保存到账号</button>
           <button id="loadAiSettingsBtn" class="ghost">读取账号配置</button>
           <button id="testAiBackendBtn" class="ghost">测试后端通道</button>
@@ -399,8 +402,10 @@
 
     <section id="view-cloud" class="view card hidden">
       <h2>账号与云同步</h2>
-      <p class="sub">数据库已统一绑定到内置 Supabase 项目。只需要邮箱和密码注册或登录，登录后会自动同步。</p>
+      <p class="sub">使用 Supabase JS SDK v2 云同步。可以直接使用内置公开 anon key，也可以填写自己的 Project URL 与 anon public / publishable key；不要填写 service_role 或任何 secret key。</p>
       <div class="settings">
+        <label class="field"><span>Supabase Project URL</span><input id="supabaseUrlInput" placeholder="https://your-project.supabase.co" /></label>
+        <label class="field"><span>Supabase anon public / publishable key</span><input id="supabaseAnonKeyInput" placeholder="只填写 anon public / publishable key，不能填写 service_role" /></label>
         <input id="emailInput" placeholder="邮箱" />
         <input id="passwordInput" type="password" placeholder="密码，至少6位" />
         <input id="newPasswordInput" type="password" placeholder="新密码（用于修改密码）" />
@@ -439,6 +444,13 @@
 <div id="mobileBottomStatsBar" class="mobile-bottom-stats-bar" aria-label="MobileBottomStatsBar">
   <button class="stat-card on" data-view="today">今日计划 <b data-mobile="today">0</b></button>
   <button class="stat-card" data-view="thesis">项目进度 <b data-mobile="project">0</b></button>
+  <button class="stat-card" data-view="review">复盘归档 <b data-mobile="done">0</b></button>
+  <button class="stat-card" data-view="report">AI总结 <b data-mobile="ai">4.3.2</b></button>
+  <button class="stat-card" data-view="cloud">云同步 <b data-mobile="cloud">4.3.2</b></button>
+</div>
+<div id="mobileBottomStatsBar" class="mobile-bottom-stats-bar" aria-label="MobileBottomStatsBar">
+  <button class="stat-card on" data-view="today">今日计划 <b data-mobile="today">0</b></button>
+  <button class="stat-card" data-view="thesis">论文进度 <b data-mobile="project">0</b></button>
   <button class="stat-card" data-view="review">复盘归档 <b data-mobile="done">0</b></button>
   <button class="stat-card" data-view="report">AI总结 <b data-mobile="ai">4.3.2</b></button>
   <button class="stat-card" data-view="cloud">云同步 <b data-mobile="cloud">4.3.2</b></button>
@@ -571,8 +583,8 @@ function loadState() {
   catch { return { tasks: [], daily: {}, archive: {}, aiReviews: {}, thesis: {}, projects: [], focusSessions: [] }; }
 }
 function loadSettings() {
-  try { return Object.assign({ email: '', theme: 'auto', brandLogo: '开', brandTitle: '开开的博士成长计划', brandSubtitle: '计划 · 项目 · 复盘 · 云同步', aiFunction: 'ai-review', aiProvider: 'deepseek', aiBaseUrl: 'https://api.deepseek.com', aiModel: 'deepseek-v4-flash' }, JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}')); }
-  catch { return { email: '', theme: 'auto', brandLogo: '开', brandTitle: '开开的博士成长计划', brandSubtitle: '计划 · 项目 · 复盘 · 云同步', aiFunction: 'ai-review', aiProvider: 'deepseek', aiBaseUrl: 'https://api.deepseek.com', aiModel: 'deepseek-v4-flash' }; }
+  try { return Object.assign({ email: '', supabaseUrl: SUPABASE_URL, supabaseAnonKey: SUPABASE_ANON_KEY, theme: 'auto', brandLogo: '开', brandTitle: '开开的博士成长计划', brandSubtitle: '计划 · 论文进度 · 复盘 · 云同步', aiFunction: 'ai-review', aiProvider: 'deepseek', aiBaseUrl: 'https://api.deepseek.com', aiModel: 'deepseek-v4-flash' }, JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}')); }
+  catch { return { email: '', supabaseUrl: SUPABASE_URL, supabaseAnonKey: SUPABASE_ANON_KEY, theme: 'auto', brandLogo: '开', brandTitle: '开开的博士成长计划', brandSubtitle: '计划 · 论文进度 · 复盘 · 云同步', aiFunction: 'ai-review', aiProvider: 'deepseek', aiBaseUrl: 'https://api.deepseek.com', aiModel: 'deepseek-v4-flash' }; }
 }
 function toast(message) {
   const node = $('toast');
@@ -773,10 +785,9 @@ function carryOverTasks() {
   let count = 0;
   state.tasks.forEach(task => {
     if (!task.done && task.dueDate < TODAY) {
-      const add = daysBetween(task.dueDate, TODAY) || 1;
       task.previousDueDate = task.dueDate;
       task.dueDate = TODAY;
-      task.carryCount = Number(task.carryCount || 0) + add;
+      task.carryCount = Number(task.carryCount || 0) + 1;
       count += 1;
     }
   });
@@ -1523,14 +1534,44 @@ function showView(view) {
   document.querySelectorAll('.desktop-summary-stats button').forEach(btn => btn.classList.toggle('on', btn.dataset.view === view));
   document.querySelectorAll('#mobileBottomStatsBar button').forEach(btn => btn.classList.toggle('on', btn.dataset.view === view));
 }
+function buildPeriodReport(days, label) {
+  const startKey = addDaysKey(TODAY, -(days - 1));
+  const done = state.tasks.filter(task => task.completedDate && task.completedDate >= startKey && task.completedDate <= TODAY);
+  const unfinished = sortTasks(state.tasks.filter(task => !task.done && task.dueDate <= TODAY));
+  const projectsText = projectSummary();
+  const doneText = done.length ? done.map((task, index) => `${index + 1}. ${task.text}（${task.type}，完成：${formatTime(task.completedAt)}）`).join('\n') : '暂无完成任务';
+  const unfinishedText = unfinished.length ? unfinished.map((task, index) => `${index + 1}. ${task.text}（计划：${task.dueDate || TODAY}，已叠加 ${task.carryCount || 0} 天）`).join('\n') : '暂无未完成待办';
+  return [
+    `【${label}｜${startKey} 至 ${TODAY}】`,
+    '',
+    '一、完成任务',
+    doneText,
+    '',
+    '二、论文进度',
+    projectsText,
+    '',
+    '三、未完成与叠加',
+    unfinishedText,
+    '',
+    '四、建议',
+    buildAdvice()
+  ].join('\n');
+}
+function generatePeriodReport(days, label) {
+  const text = buildPeriodReport(days, label);
+  if ($('aiReviewText')) $('aiReviewText').value = text;
+  updateAiPreview(text);
+  showView('report');
+  toast(`${label}已生成`);
+}
 function exportAll() {
   const lines = [
     '# 开开的博士成长计划导出',
     '',
     `导出时间：${formatTime(new Date().toISOString())}`,
     '',
-    '## 项目进度',
-    ...((state.projects || []).length ? state.projects.map(project => `- 【${project.type}】${project.title}：${project.progress || 0}% | 阶段：${project.stage || ''} | 目标：${project.targetDate || ''} | 下一步：${String(project.next || '').replace(/\n/g, '；')} | 卡点：${String(project.blockers || '').replace(/\n/g, '；')}`) : ['- 暂无项目进度']),
+    '## 论文进度',
+    ...((state.projects || []).length ? state.projects.map(project => `- 【${project.type}】${project.title}：${project.progress || 0}% | 阶段：${project.stage || ''} | 目标：${project.targetDate || ''} | 下一步：${String(project.next || '').replace(/\n/g, '；')} | 卡点：${String(project.blockers || '').replace(/\n/g, '；')}`) : ['- 暂无论文进度']),
     '',
     '## 任务记录',
     ...state.tasks.map(task => `- [${task.done ? 'x' : ' '}] ${task.text} #${task.type} #${priorityLabel[task.priority] || task.priority} | 布置时间：${formatTime(task.assignedAt)} | 完成时间：${task.completedAt ? formatTime(task.completedAt) : '未完成'} | 当前待办日期：${task.dueDate || ''} | 叠加天数：${task.carryCount || 0}`),
@@ -1554,18 +1595,33 @@ function exportAll() {
   anchor.remove();
   URL.revokeObjectURL(url);
 }
+function configuredSupabaseUrl() { return $('supabaseUrlInput')?.value.trim() || settings.supabaseUrl || SUPABASE_URL; }
+function configuredSupabaseAnonKey() { return $('supabaseAnonKeyInput')?.value.trim() || settings.supabaseAnonKey || SUPABASE_ANON_KEY; }
 function initSupabaseFromInputs() {
-  settings.email = $('emailInput').value.trim();
+  settings.email = $('emailInput')?.value.trim() || settings.email || '';
+  settings.supabaseUrl = configuredSupabaseUrl();
+  settings.supabaseAnonKey = configuredSupabaseAnonKey();
   settings.theme = $('themeInput')?.value || settings.theme || 'auto';
   localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
-  if (!window.supabase) { toast('Supabase SDK 未加载，检查网络或 CDN'); return null; }
-  if (!supabaseClient) supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  if (!settings.supabaseUrl || !settings.supabaseAnonKey) { toast('请先填写 Supabase Project URL 和 anon public key'); return null; }
+  if (/service[_-]?role/i.test(settings.supabaseAnonKey)) { toast('不能在前端填写 service_role 或 secret key，请改用 anon public / publishable key'); return null; }
+  if (!window.supabase) { toast('Supabase SDK 未加载，基础本地功能仍可使用'); return null; }
+  try {
+    supabaseClient = window.supabase.createClient(settings.supabaseUrl, settings.supabaseAnonKey);
+  } catch (error) {
+    toast(`Supabase 初始化失败：${error.message || error}`);
+    return null;
+  }
   return supabaseClient;
 }
 async function refreshUser() {
-  if (!supabaseClient && window.supabase) supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  if (!supabaseClient && window.supabase) {
+    try { supabaseClient = window.supabase.createClient(configuredSupabaseUrl(), configuredSupabaseAnonKey()); }
+    catch { return null; }
+  }
   if (!supabaseClient) return null;
-  const { data } = await supabaseClient.auth.getUser();
+  const { data, error } = await supabaseClient.auth.getUser();
+  if (error) { currentUser = null; return null; }
   currentUser = data.user || null;
   return currentUser;
 }
@@ -1575,6 +1631,18 @@ function renderSyncStatus(mode) {
   if (mode === 'synced') { node.textContent = '已自动同步'; node.className = 'status ok'; return; }
   if (currentUser) { node.textContent = 'Supabase 已登录 · 自动同步'; node.className = 'status ok'; }
   else { node.textContent = 'Supabase 未登录'; node.className = 'status'; }
+}
+async function testSupabaseConfig() {
+  const client = initSupabaseFromInputs();
+  if (!client) return;
+  try {
+    const { error } = await client.auth.getSession();
+    if (error) return toast(`Supabase 配置测试失败：${error.message}`);
+    toast('Supabase 配置可用，本地功能和云同步入口正常');
+    renderSyncStatus();
+  } catch (error) {
+    toast(`Supabase 配置测试失败：${error.message || error}`);
+  }
 }
 async function sendPasswordReset() {
   if (!initSupabaseFromInputs()) return;
@@ -1717,6 +1785,8 @@ function bindEvents() {
   on('loadArchiveDateBtn', 'click', loadArchiveDate);
   on('archiveDateInput', 'change', loadArchiveDate);
   on('saveReviewBtn', 'click', saveReview);
+  on('weeklyReportBtn', 'click', () => generatePeriodReport(7, '周报'));
+  on('monthlyReportBtn', 'click', () => generatePeriodReport(31, '月报'));
   on('saveAiSettingsBtn', 'click', saveAiSettings);
   on('loadAiSettingsBtn', 'click', () => loadAiSettings());
   on('testAiBackendBtn', 'click', testAiBackend);
@@ -1737,6 +1807,7 @@ function bindEvents() {
     resetProjectForm();
     saveLocal();
   });
+  on('testConfigBtn', 'click', testSupabaseConfig);
   on('signupBtn', 'click', signup);
   on('loginBtn', 'click', login);
   on('resetPasswordBtn', 'click', sendPasswordReset);
@@ -1749,6 +1820,8 @@ function bindEvents() {
 }
 async function init() {
   migrateState();
+  if ($('supabaseUrlInput')) $('supabaseUrlInput').value = settings.supabaseUrl || SUPABASE_URL;
+  if ($('supabaseAnonKeyInput')) $('supabaseAnonKeyInput').value = settings.supabaseAnonKey || SUPABASE_ANON_KEY;
   $('emailInput').value = settings.email || '';
   applyBrandSettings();
   fillAiForm({ status: '等待登录后读取账号配置' });
@@ -1762,7 +1835,8 @@ async function init() {
   setInterval(renderQuote, 3600000);
   let loadedRemote = false;
   if (window.supabase) {
-    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    try { supabaseClient = window.supabase.createClient(configuredSupabaseUrl(), configuredSupabaseAnonKey()); }
+    catch { supabaseClient = null; }
     await refreshUser();
     if (currentUser) {
       loadedRemote = await pullCloud({ silent: true, keepView: true });
