@@ -436,6 +436,13 @@
   <button class="stat-card" data-view="report">AI总结 <b data-mobile="ai">4.3.2</b></button>
   <button class="stat-card" data-view="cloud">云同步 <b data-mobile="cloud">4.3.2</b></button>
 </div>
+<div id="mobileBottomStatsBar" class="mobile-bottom-stats-bar" aria-label="MobileBottomStatsBar">
+  <button class="stat-card on" data-view="today">今日计划 <b data-mobile="today">0</b></button>
+  <button class="stat-card" data-view="thesis">项目进度 <b data-mobile="project">0</b></button>
+  <button class="stat-card" data-view="review">复盘归档 <b data-mobile="done">0</b></button>
+  <button class="stat-card" data-view="report">AI总结 <b data-mobile="ai">4.3.2</b></button>
+  <button class="stat-card" data-view="cloud">云同步 <b data-mobile="cloud">4.3.2</b></button>
+</div>
 <div id="toast" class="toast"></div>
 <div id="celebration" class="celebration"></div>
 
@@ -569,6 +576,7 @@ function loadSettings() {
 }
 function toast(message) {
   const node = $('toast');
+  if (!node) { console.info(message); return; }
   node.textContent = message;
   node.classList.add('show');
   setTimeout(() => node.classList.remove('show'), 2200);
@@ -954,9 +962,9 @@ function renderFocusTaskOptions() {
   if ([...(select.options || [])].some(option => option.value === current)) select.value = current;
 }
 function currentFocusTopic() {
-  const manual = $('focusTopicInput').value.trim();
+  const manual = $('focusTopicInput')?.value.trim() || '';
   if (manual) return { topic: manual, taskId: '' };
-  const taskId = $('focusTaskSelect').value;
+  const taskId = $('focusTaskSelect')?.value || '';
   const task = state.tasks.find(item => item.id === taskId);
   return { topic: task ? task.text : '自由专注', taskId: task ? task.id : '' };
 }
@@ -986,7 +994,7 @@ function logFocusSession(minutes = currentElapsedMinutes(), source = 'manual') {
   }));
   timerStartedAt = null;
   timerSeconds = timerDefaultSeconds;
-  $('focusTopicInput').value = '';
+  if ($('focusTopicInput')) $('focusTopicInput').value = '';
   saveLocal();
   toast(`已记录 ${minutes} 分钟专注`);
 }
@@ -1018,7 +1026,8 @@ function renderFocusPie(sessions = focusSessionsByDate(TODAY)) {
 function renderFocusLog() {
   const sessions = focusSessionsByDate(TODAY);
   const todayMinutes = focusMinutesByDate(TODAY);
-  $('focusTodayCount').textContent = state.daily?.[TODAY]?.checked ? '已打卡' : '未打卡';
+  const focusTodayNode = $('focusTodayCount');
+  if (focusTodayNode) focusTodayNode.textContent = state.daily?.[TODAY]?.checked ? '已打卡' : '未打卡';
   const logNode = $('focusLogList');
   if (!logNode) return;
   renderFocusTaskOptions();
@@ -1651,28 +1660,30 @@ async function pullCloud(options = {}) {
 }
 
 function renderTimer() {
+  const display = $('timerDisplay');
+  if (!display) return;
   const minutes = String(Math.floor(timerSeconds / 60)).padStart(2, '0');
   const seconds = String(timerSeconds % 60).padStart(2, '0');
-  $('timerDisplay').textContent = `${minutes}:${seconds}`;
+  display.textContent = `${minutes}:${seconds}`;
 }
 function setTimer(minutes) {
   pauseTimer();
   timerStartedAt = null;
   timerDefaultSeconds = minutes * 60;
   timerSeconds = timerDefaultSeconds;
-  $('timerHint').textContent = `${minutes} 分钟专注轮已准备好。`;
+  if ($('timerHint')) $('timerHint').textContent = `${minutes} 分钟专注轮已准备好。`;
 }
 function startTimer() {
   if (timerId) return;
   timerStartedAt = timerStartedAt || new Date().toISOString();
-  $('timerHint').textContent = '专注中：只做当前这一件事。';
+  if ($('timerHint')) $('timerHint').textContent = '专注中：只做当前这一件事。';
   timerId = setInterval(() => {
     timerSeconds -= 1;
       if (timerSeconds <= 0) {
       const minutes = Math.round(timerDefaultSeconds / 60);
       pauseTimer();
       logFocusSession(minutes, 'timer');
-      $('timerHint').textContent = '一轮专注完成，已自动记录，休息 3-5 分钟再继续。';
+      if ($('timerHint')) $('timerHint').textContent = '一轮专注完成，已自动记录，休息 3-5 分钟再继续。';
     }
   }, 1000);
 }
@@ -1680,44 +1691,45 @@ function pauseTimer() {
   if (!timerId) return;
   clearInterval(timerId);
   timerId = null;
-  $('timerHint').textContent = '已暂停，准备好后继续。';
+  if ($('timerHint')) $('timerHint').textContent = '已暂停，准备好后继续。';
 }
 function resetTimer() {
   pauseTimer();
   timerStartedAt = null;
   timerSeconds = timerDefaultSeconds;
-  $('timerHint').textContent = '已重置专注计时。';
+  if ($('timerHint')) $('timerHint').textContent = '已重置专注计时。';
 }
 
 function bindEvents() {
-  $('addTaskBtn').addEventListener('click', () => addTask());
-  $('taskInput').addEventListener('keydown', event => { if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') addTask(); });
+  const on = (id, event, handler) => { const node = $(id); if (node) node.addEventListener(event, handler); };
+  on('addTaskBtn', 'click', () => addTask());
+  on('taskInput', 'keydown', event => { if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') addTask(); });
   document.querySelectorAll('.quick button[data-template]').forEach(btn => {
     btn.addEventListener('click', () => { $('taskInput').value = btn.dataset.template; $('typeInput').value = btn.dataset.type || '论文'; });
   });
   document.querySelectorAll('.desktop-summary-stats button, #mobileBottomStatsBar button').forEach(btn => btn.addEventListener('click', () => showView(btn.dataset.view)));
-  $('saveDailyBtn').addEventListener('click', saveDaily);
-  $('themeInput').addEventListener('change', () => { settings.theme = $('themeInput').value; localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); applyDailyTheme(); toast('主题颜色已更新'); });
-  ['brandLogoInput', 'brandTitleInput', 'brandSubtitleInput'].forEach(id => $(id).addEventListener('change', saveBrandSettings));
-  $('saveProjectBtn').addEventListener('click', saveProject);
-  $('resetProjectBtn').addEventListener('click', resetProjectForm);
-  $('generateReviewBtn').addEventListener('click', () => generateReview());
-  $('loadArchiveDateBtn').addEventListener('click', loadArchiveDate);
-  $('archiveDateInput').addEventListener('change', loadArchiveDate);
-  $('saveReviewBtn').addEventListener('click', saveReview);
-  $('saveAiSettingsBtn').addEventListener('click', saveAiSettings);
-  $('loadAiSettingsBtn').addEventListener('click', () => loadAiSettings());
-  $('testAiBackendBtn').addEventListener('click', testAiBackend);
-  $('aiReviewBtn').addEventListener('click', generateAiReview);
-  $('copyAiReviewBtn').addEventListener('click', copyAiReview);
-  $('aiReviewText').addEventListener('input', () => updateAiPreview());
-  $('aiModeInput').addEventListener('change', () => { $('aiStatusInput').value = aiMode() === 'custom' ? '自定义模式：请填写需求' : '每周总结模式：自动汇总最近 7 天'; });
+  on('saveDailyBtn', 'click', saveDaily);
+  on('themeInput', 'change', () => { settings.theme = $('themeInput').value; localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); applyDailyTheme(); toast('主题颜色已更新'); });
+  ['brandLogoInput', 'brandTitleInput', 'brandSubtitleInput'].forEach(id => on(id, 'change', saveBrandSettings));
+  on('saveProjectBtn', 'click', saveProject);
+  on('resetProjectBtn', 'click', resetProjectForm);
+  on('generateReviewBtn', 'click', () => generateReview());
+  on('loadArchiveDateBtn', 'click', loadArchiveDate);
+  on('archiveDateInput', 'change', loadArchiveDate);
+  on('saveReviewBtn', 'click', saveReview);
+  on('saveAiSettingsBtn', 'click', saveAiSettings);
+  on('loadAiSettingsBtn', 'click', () => loadAiSettings());
+  on('testAiBackendBtn', 'click', testAiBackend);
+  on('aiReviewBtn', 'click', generateAiReview);
+  on('copyAiReviewBtn', 'click', copyAiReview);
+  on('aiReviewText', 'input', () => updateAiPreview());
+  on('aiModeInput', 'change', () => { $('aiStatusInput').value = aiMode() === 'custom' ? '自定义模式：请填写需求' : '每周总结模式：自动汇总最近 7 天'; });
   ['searchInput', 'filterTypeInput', 'scopeInput'].forEach(id => {
-    $(id).addEventListener('input', renderTasks);
-    $(id).addEventListener('change', renderTasks);
+    on(id, 'input', renderTasks);
+    on(id, 'change', renderTasks);
   });
-  $('exportBtn').addEventListener('click', exportAll);
-  $('clearBtn').addEventListener('click', () => {
+  on('exportBtn', 'click', exportAll);
+  on('clearBtn', 'click', () => {
     if (!confirm('清空本地数据？云端不会自动删除。')) return;
     state = { tasks: [], daily: {}, archive: {}, aiReviews: {}, thesis: {}, projects: [], focusSessions: [] };
     migrateState();
@@ -1725,21 +1737,15 @@ function bindEvents() {
     resetProjectForm();
     saveLocal();
   });
-  $('signupBtn').addEventListener('click', signup);
-  $('loginBtn').addEventListener('click', login);
-  $('resetPasswordBtn').addEventListener('click', sendPasswordReset);
-  $('updatePasswordBtn').addEventListener('click', updatePassword);
-  $('logoutBtn').addEventListener('click', logout);
-  $('pushCloudBtn').addEventListener('click', pushCloud);
-  $('pullCloudBtn').addEventListener('click', pullCloud);
-  $('pushSideBtn').addEventListener('click', pushCloud);
-  $('pullSideBtn').addEventListener('click', pullCloud);
-  $('startTimerBtn').addEventListener('click', startTimer);
-  $('pauseTimerBtn').addEventListener('click', pauseTimer);
-  $('resetTimerBtn').addEventListener('click', resetTimer);
-  $('logFocusBtn').addEventListener('click', () => logFocusSession(currentElapsedMinutes(), 'manual'));
-  $('focusTaskSelect').addEventListener('change', () => { $('focusTopicInput').value = ''; });
-  document.querySelectorAll('.timer-presets button[data-minutes]').forEach(btn => btn.addEventListener('click', () => setTimer(Number(btn.dataset.minutes))));
+  on('signupBtn', 'click', signup);
+  on('loginBtn', 'click', login);
+  on('resetPasswordBtn', 'click', sendPasswordReset);
+  on('updatePasswordBtn', 'click', updatePassword);
+  on('logoutBtn', 'click', logout);
+  on('pushCloudBtn', 'click', pushCloud);
+  on('pullCloudBtn', 'click', pullCloud);
+  on('pushSideBtn', 'click', pushCloud);
+  on('pullSideBtn', 'click', pullCloud);
 }
 async function init() {
   migrateState();
@@ -1775,7 +1781,10 @@ async function init() {
   resetProjectForm();
   render();
 }
-init();
+init().catch(error => {
+  console.error('App init failed', error);
+  toast(`页面初始化失败：${error.message || error}`);
+});
 </script>
 </body>
 </html>
