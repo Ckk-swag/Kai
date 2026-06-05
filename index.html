@@ -1,12 +1,12 @@
 <!doctype html>
-<!-- Kai startup version: 4.3.2-fixed-20260602 -->
+<!-- Kai startup version: 4.3.3-immediate-20260605 -->
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="theme-color" content="#b8f2e6" />
   <title>开开的博士成长计划</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     :root {
       --bg: #f4fffb;
@@ -244,8 +244,8 @@
       <button class="on stat-card" data-view="today">今日计划 <b id="countToday">0</b></button>
       <button class="stat-card" data-view="thesis">论文进度 <b id="countProject">0</b></button>
       <button class="stat-card" data-view="review">复盘归档 <b id="countDone">0</b></button>
-      <button class="stat-card" data-view="report">AI总结 <b>4.3.2</b></button>
-      <button class="desktop-tab stat-card" data-view="cloud">云同步 <b>4.3.2</b></button>
+      <button class="stat-card" data-view="report">AI总结 <b>4.3.3</b></button>
+      <button class="desktop-tab stat-card" data-view="cloud">云同步 <b>4.3.3</b></button>
     </div>
     <div class="side-actions">
       <button id="pushSideBtn" class="ghost">推送云端</button>
@@ -455,6 +455,13 @@
   <button class="stat-card" data-view="report">AI总结 <b data-mobile="ai">4.3.2</b></button>
   <button class="stat-card" data-view="cloud">云同步 <b data-mobile="cloud">4.3.2</b></button>
 </div>
+<div id="mobileBottomStatsBar" class="mobile-bottom-stats-bar" aria-label="MobileBottomStatsBar">
+  <button class="stat-card on" data-view="today">今日计划 <b data-mobile="today">0</b></button>
+  <button class="stat-card" data-view="thesis">论文进度 <b data-mobile="project">0</b></button>
+  <button class="stat-card" data-view="review">复盘归档 <b data-mobile="done">0</b></button>
+  <button class="stat-card" data-view="report">AI总结 <b data-mobile="ai">4.3.3</b></button>
+  <button class="stat-card" data-view="cloud">云同步 <b data-mobile="cloud">4.3.3</b></button>
+</div>
 <div id="toast" class="toast"></div>
 <div id="celebration" class="celebration"></div>
 
@@ -463,6 +470,7 @@ const STORAGE_KEY = 'kaikai_growth_32';
 const SETTINGS_KEY = 'kaikai_growth_32_settings';
 const SUPABASE_URL = 'https://ncxxtrnmpbnbtzdtdvin.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5jeHh0cm5tcGJuYnR6ZHRkdmluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg4OTA0NDIsImV4cCI6MjA5NDQ2NjQ0Mn0.M58xkngMoiQHWH9Rc3X7Bv8J8xftVWncRNjcgqi941I';
+const APP_VERSION = '4.3.3';
 const TODAY = toDateKey(new Date());
 const priorityLabel = { today: '今天必须动', week: '本周推进', low: '有空再说' };
 const moodLabel = { 稳定: '😌 稳定', 平静: '🌿 平静', 高效: '🔥 高效', 开心: '😊 开心', 焦虑: '😵‍💫 焦虑', 紧张: '⏳ 紧张', 卡住: '🧱 卡住', 疲惫: '😴 疲惫', 低落: '🌧️ 低落', 兴奋: '✨ 兴奋' };
@@ -1422,7 +1430,7 @@ async function saveAiSettings() {
   toast('AI 配置已保存到账号');
 }
 async function loadAiSettings(options = {}) {
-  if (!supabaseClient && window.supabase) supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  if (!supabaseClient && window.supabase) supabaseClient = window.supabase.createClient(configuredSupabaseUrl(), configuredSupabaseAnonKey());
   if (!supabaseClient) return false;
   await refreshUser();
   if (!currentUser) return false;
@@ -1489,7 +1497,7 @@ function syncMobileBottomStats() {
   if (mToday && $('countToday')) mToday.textContent = $('countToday').textContent || '0';
   if (mProject && $('countProject')) mProject.textContent = $('countProject').textContent || '0';
   if (mDone && $('countDone')) mDone.textContent = $('countDone').textContent || '0';
-  if (mCloud) mCloud.textContent = '4.3.2';
+  if (mCloud) mCloud.textContent = APP_VERSION;
 }
 
 function renderStats() {
@@ -1818,6 +1826,33 @@ function bindEvents() {
   on('pushSideBtn', 'click', pushCloud);
   on('pullSideBtn', 'click', pullCloud);
 }
+function promiseWithTimeout(promise, ms, fallback = null) {
+  let timer;
+  return Promise.race([
+    promise.finally(() => clearTimeout(timer)),
+    new Promise(resolve => { timer = setTimeout(() => resolve(fallback), ms); })
+  ]);
+}
+function startBackgroundCloudLoad(attempt = 0) {
+  if (!window.supabase) {
+    if (attempt < 30) setTimeout(() => startBackgroundCloudLoad(attempt + 1), 200);
+    else renderSyncStatus();
+    return;
+  }
+  (async () => {
+    try {
+      if (!supabaseClient) supabaseClient = window.supabase.createClient(configuredSupabaseUrl(), configuredSupabaseAnonKey());
+      const user = await promiseWithTimeout(refreshUser(), 3500, null);
+      if (!user) { renderSyncStatus(); return; }
+      const pulled = await promiseWithTimeout(pullCloud({ silent: true, keepView: true }), 6000, false);
+      await promiseWithTimeout(loadAiSettings({ silent: true }), 4000, false);
+      renderSyncStatus(pulled ? 'synced' : undefined);
+    } catch (error) {
+      console.warn('Background cloud load skipped', error);
+      renderSyncStatus();
+    }
+  })();
+}
 async function init() {
   migrateState();
   if ($('supabaseUrlInput')) $('supabaseUrlInput').value = settings.supabaseUrl || SUPABASE_URL;
@@ -1833,17 +1868,7 @@ async function init() {
   applyDailyTheme();
   renderQuote();
   setInterval(renderQuote, 3600000);
-  let loadedRemote = false;
-  if (window.supabase) {
-    try { supabaseClient = window.supabase.createClient(configuredSupabaseUrl(), configuredSupabaseAnonKey()); }
-    catch { supabaseClient = null; }
-    await refreshUser();
-    if (currentUser) {
-      loadedRemote = await pullCloud({ silent: true, keepView: true });
-      await loadAiSettings({ silent: true });
-    }
-  }
-  if (!loadedRemote && !state.tasks.length) {
+  if (!state.tasks.length) {
     state.tasks = [
       normalizeTask({ id: 'demo1', text: '确定今天最重要的科研主线，并拆成一个15分钟动作', type: '论文', priority: 'today', createdDate: TODAY }),
       normalizeTask({ id: 'demo2', text: '整理组会汇报：完成、卡点、下周计划各写三行', type: '组会', priority: 'week', createdDate: TODAY })
@@ -1854,6 +1879,7 @@ async function init() {
   fillDaily();
   resetProjectForm();
   render();
+  startBackgroundCloudLoad();
 }
 init().catch(error => {
   console.error('App init failed', error);

@@ -1,6 +1,6 @@
-# 开开的科研成长计划 4.3.2
+# 开开的科研成长计划 4.3.3
 
-这是 GitHub Pages + Supabase JS SDK 云同步版本。4.3.2 保留本地任务、论文进度、复盘归档、导出、AI 总结/周报月报和云同步能力；即使 Supabase SDK 加载失败，本地基础功能也应继续可用。
+这是 GitHub Pages + Supabase JS SDK 云同步版本。4.3.3 保留本地任务、论文进度、复盘归档、导出、AI 总结/周报月报和云同步能力；即使 Supabase SDK 加载失败，本地基础功能也应继续可用；4.3.3 改为本地优先立即渲染，云端读取在后台进行，避免进入页面后一直等同步。
 
 ## 使用顺序
 1. 直接把仓库根目录的 `index.html` 部署到 GitHub Pages 使用。
@@ -39,4 +39,4 @@
 - 当前仓库没有 `.github/workflows/` 下的 Supabase Preview / Postgres Preview workflow；GitHub Pages 静态前端不需要 Action 直连 Supabase Postgres。
 
 ## 清缓存访问
-- 部署后如果浏览器仍显示旧页面，请访问 `https://ckk-swag.github.io/Kai/?v=324` 或继续递增参数（例如 `?v=325`），并强制刷新浏览器缓存。
+- 部署后如果浏览器仍显示旧页面，请访问 `https://ckk-swag.github.io/Kai/?v=433` 或继续递增参数（例如 `?v=434`），并强制刷新浏览器缓存。
