@@ -36,7 +36,7 @@
 - AI 复盘请通过 `supabase/functions/ai-review` 调后端，不要让浏览器直接请求 DeepSeek。
 
 ## GitHub Actions
-- 当前仓库没有 `.github/workflows/` 下的 Supabase Preview / Postgres Preview workflow；GitHub Pages 静态前端不需要 Action 直连 Supabase Postgres。
+- `.github/workflows/supabase-preview.yml` 是一个 no-op 检查，只输出说明并通过；GitHub Pages 静态前端不需要 Action 直连 Supabase Postgres。如果 GitHub 页面仍出现带 Supabase 图标的外部 “Supabase Preview” 失败，那是 Supabase Dashboard 的 GitHub Integration，需要在 Supabase Project Settings → Integrations 中关闭该仓库的 preview/branching 集成。
 
 ## 清缓存访问
 - 部署后如果浏览器仍显示旧页面，请访问 `https://ckk-swag.github.io/Kai/?v=433` 或继续递增参数（例如 `?v=434`），并强制刷新浏览器缓存。

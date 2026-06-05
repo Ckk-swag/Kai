@@ -17,7 +17,7 @@
 4. 在“AI总结”页保存供应商、Base URL、模型（支持 DeepSeek V4 Flash / V4 Pro）和 API Key 后，可点击“测试后端通道”确认账号配置与函数可用；前端只展示阅读版并保存归档记录。
 
 ## GitHub Actions
-本仓库是 GitHub Pages 静态前端 + Supabase JS SDK 项目，不需要 Supabase Preview / Postgres Preview workflow 直连数据库；当前仓库未保留这类 workflow。
+本仓库是 GitHub Pages 静态前端 + Supabase JS SDK 项目，不需要 Supabase Preview / Postgres Preview workflow 直连数据库；`.github/workflows/supabase-preview.yml` 只保留 no-op 通过检查，避免无关 Postgres preview 阻塞合并。如果 GitHub 上仍显示带 Supabase 图标的外部检查失败，请到 Supabase Dashboard → Project Settings → Integrations 关闭该仓库的 GitHub Preview/Branching integration。
 
 ## 清缓存
 部署后请用 `https://ckk-swag.github.io/Kai/?v=433` 验证新版本，必要时递增 `v` 参数并强制刷新。

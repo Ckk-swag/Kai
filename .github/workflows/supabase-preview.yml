@@ -1,0 +1,22 @@
+name: Supabase Preview
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  supabase-preview:
+    name: Supabase Preview
+    runs-on: ubuntu-latest
+    steps:
+      - name: Static frontend does not need Postgres preview
+        run: |
+          echo "Kai is a GitHub Pages static frontend that talks to Supabase via the browser JS SDK."
+          echo "Skipping Supabase/Postgres preview branch creation to avoid irrelevant database preview failures."
